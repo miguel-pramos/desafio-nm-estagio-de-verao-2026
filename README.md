@@ -1,6 +1,6 @@
 # Workspace: Desafio Estágio Verão 2026 da NeuralMind
 
-Esse repositório se estrutura em uma VS Code Workspace desenvolvida para realizar o Desafio Estágio Verão 2026 da NeuralMind. Sugerimos que você trabalhe na workspace para facilitar a navegação entre as pastas e o desenvolvimento do projeto.
+Esse repositório se estrutura em uma VS Code Workspace desenvolvida para realizar o Desafio Estágio Verão 2026 da NeuralMind. Recomendamos que você utilize uma workspace unificada para facilitar a navegação entre as pastas e o desenvolvimento do projeto, especialmente considerando que você atuará em dois ambientes distintos: Python e Node.js.
 
 Caso você não esteja familiarizado com o VS Code Workspace, consulte a documentação oficial: [VS Code Workspace](https://code.visualstudio.com/docs/editor/workspaces).
 
@@ -57,7 +57,7 @@ Isso subirá todos os serviços integrados. Caso necessário, ajuste as variáve
 
 ## Contato
 
-Para dúvidas, sugestões ou reportar problemas, entre em contato com o avaliador: [roberto@neuralmind.ai](mailto:roberto@neuralmind.ai).
+Para dúvidas, sugestões ou reportar problemas, entre em contato com [roberto@neuralmind.ai](mailto:roberto@neuralmind.ai) ou [luis.emidio@neuralmind.ai].
 
 ---
 
