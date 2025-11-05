@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Backend API for an AI-powered chatbot, capable of providing well-founded answers about the Unicamp 2026 admission exam"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "fastapi[standard]>=0.120.4",
     "openai>=2.6.1",
@@ -21,6 +21,8 @@ dependencies = [
     "bs4>=0.0.2",
     "langchain-openai>=1.0.2",
     "langchain-chroma>=1.0.0",
+    "onnxruntime>=1.23.2",
+    "asyncpg>=0.30.0",
 ]
 
 [dependency-groups]
