@@ -26,77 +26,73 @@ class ScrapeResult:
 
 
 async def scrape(
-    url: str,
+    urls: list[str],
     *,
     client: Optional[httpx.AsyncClient] = None,
     timeout: float = 15.0,
-) -> ScrapeResult:
+) -> list[ScrapeResult]:
 
-    # 1. Gerenciamento do cliente HTTP
     created_client = False
-    client_to_use: httpx.AsyncClient
 
     if client is None:
-        client_to_use = httpx.AsyncClient(
+        client = httpx.AsyncClient(
             follow_redirects=True,
             timeout=timeout,
             headers={"User-Agent": DEFAULT_USER_AGENT},
         )
         created_client = True
     else:
-        client_to_use = client
+        client = client
 
     try:
-        # 2. Normalizar e buscar a URL
-        normalized_url = url if re.match(r"^https?://", url) else f"https://{url}"
-        response = await client_to_use.get(normalized_url)
+        normalized_urls = [
+            url if re.match(r"^https?://", url) else f"https://{url}" for url in urls
+        ]
 
-        # 3. Validar a Resposta (Forma Enxuta)
-        # O .raise_for_status() já cuida de erros 4xx e 5xx
-        response.raise_for_status()
+        results: list[ScrapeResult] = []
 
-        # Validação de tipo de conteúdo (essencial)
-        content_type = response.headers.get("content-type", "")
-        if "text/html" not in content_type:
-            raise ValueError(
-                f"Content type '{content_type}' de '{response.url}' não é HTML."
+        for normalized_url in normalized_urls:
+            response = await client.get(normalized_url)
+
+            response.raise_for_status()
+
+            # Validação de tipo de conteúdo (essencial)
+            content_type = response.headers.get("content-type", "")
+            if "text/html" not in content_type:
+                raise ValueError(
+                    f"Content type '{content_type}' de '{response.url}' não é HTML."
+                )
+
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            # Remove tags indesejadas 
+            for element in soup.find_all(BLOCK_TAGS_TO_REMOVE):
+                element.decompose()
+            for element in soup.find_all(STRUCTURAL_TAGS_TO_PRUNE):
+                element.decompose()
+
+            text = soup.get_text(separator=" ", strip=True)
+            text = re.sub(r"\s+", " ", text).strip()
+
+            # Extrair título (ainda útil para RAG)
+            title = soup.title.string.strip() if soup.title and soup.title.string else None
+
+            results.append(
+                ScrapeResult(
+                    url=str(response.url),  # URL final após redirecionamentos
+                    text=text,
+                    title=title,
+                    status_code=response.status_code,
+                )
             )
-
-        # 4. Parsear e Limpar o HTML
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # Remove tags indesejadas (lógica original)
-        for element in soup.find_all(BLOCK_TAGS_TO_REMOVE):
-            element.decompose()
-        for element in soup.find_all(STRUCTURAL_TAGS_TO_PRUNE):
-            element.decompose()
-
-        # 5. Extrair Texto (Forma Enxuta)
-        # .get_text() é mais eficiente para limpeza de espaços
-        # separator=" " garante que palavras não se colem (ex: "palavra1palavra2")
-        # strip=True remove espaços em branco no início e fim
-        text = soup.get_text(separator=" ", strip=True)
-
-        # Limpeza final para colapsar múltiplos espaços em um único
-        text = re.sub(r"\s+", " ", text).strip()
-
-        # Extrair título (ainda útil para RAG)
-        title = soup.title.string.strip() if soup.title and soup.title.string else None
-
-        return ScrapeResult(
-            url=str(response.url),  # URL final após redirecionamentos
-            text=text,
-            title=title,
-            status_code=response.status_code,
-        )
-
+        return results
+    
     except httpx.HTTPStatusError as exc:
-        print(f"Erro de HTTP ao buscar {url}: {exc.response.status_code}")
-        # É importante relançar para que o chamador saiba que falhou
+        print(f"Erro de HTTP ao buscar {exc.response.url}: {exc.response.status_code}")
         raise
     except (httpx.HTTPError, ValueError, Exception) as exc:
-        print(f"Erro ao processar {url}: {exc}")
+        print(f"Erro ao processar: {exc}")
         raise
     finally:
         if created_client:
-            await client_to_use.aclose()
+            await client.aclose()
