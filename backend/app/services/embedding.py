@@ -65,12 +65,12 @@ def retrieve_docs(msgs: list[ClientMessage], k: int = 5) -> List[Document]:
 
     return vectorstore.similarity_search(query, k=k)
 
-async def create_vector_store(urls: list[str]) -> Chroma:
+async def create_vector_store(base_url: str) -> Chroma:
     """Ingest a list of URLs, split into chunks and persist a Chroma DB.
 
     Note: embeddings are created with the configured OPENAI API key.
     """
-    scrape_results = await scrape(urls)
+    scrape_results = await scrape(base_url)
 
     documents = []
     for scrape_result in scrape_results:

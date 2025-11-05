@@ -29,11 +29,7 @@ class Settings(BaseSettings):
 
     # RAG / ingestion settings
     # Provide a comma-separated list of URLs to ingest on startup, or leave blank.
-    INGEST_URLS: str = (
-        "https://www.comvest.unicamp.br,"
-        "https://www.comvest.unicamp.br/quero-prestar,"
-        "https://www.comvest.unicamp.br/ingresso-2026/vestibular-2026"
-    )
+    INGEST_BASE_URL: str = "https://www.comvest.unicamp.br/"
     # When true, the app will attempt to ingest INGEST_URLS on FastAPI startup.
     INGEST_ON_STARTUP: bool = True
     # If true, force ingestion even if a chroma DB already exists.

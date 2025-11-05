@@ -16,28 +16,14 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan handler: optional ingestion on startup using settings."""
-    logger = logging.getLogger(__name__)
 
     if settings.INGEST_ON_STARTUP:
-        raw = settings.INGEST_URLS or ""
-        urls = [u.strip() for u in raw.split(",") if u.strip()]
+        base_url = settings.INGEST_BASE_URL
 
-        if not urls:
-            logger.warning(
-                "INGEST_ON_STARTUP is true but INGEST_URLS is empty; nothing to ingest"
-            )
-        else:
-            if chroma_db_populated() and not settings.INGEST_FORCE:
-                logger.info(
-                    "Chroma DB already populated and INGEST_FORCE is false; skipping ingestion"
-                )
-            else:
-                try:
-                    logger.info("Starting vectorstore ingestion for %d urls", len(urls))
-                    await create_vector_store(urls)
-                    logger.info("Vectorstore ingestion complete")
-                except Exception as e:
-                    logger.exception("Vectorstore ingestion failed: %s", e)
+        if base_url:
+            if not chroma_db_populated() or settings.INGEST_FORCE:
+                await create_vector_store(base_url)
+                
 
     yield
 
