@@ -99,17 +99,10 @@ async def handle_chat_data(
             if m.role == "user":
                 user_query_text = m.content or ""
                 break
-
-    if user_query_text:
-        try:
-            docs = retrieve_docs(user_query_text, k=5)
-            if docs:
-                context_msg = build_context_message_from_documents(docs)
-                # Prepend the system context to the openai messages
-                openai_messages = [context_msg] + openai_messages
-        except Exception:
-            # retrieval should be best-effort: ignore errors and proceed
-            pass
+    # RAG
+    docs = retrieve_docs(messages)
+    context_msg = build_context_message_from_documents(docs)
+    openai_messages = [context_msg] + openai_messages
 
     # Track messages for persistence if chat_id is provided
     ui_messages = []

@@ -6,28 +6,14 @@ from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
+from ..schemas.ai import ClientMessage
+from ..config.settings import get_settings
 from .scraper import scrape
 
 
 CHROMA_DB_PATH = "./chroma_db"
 
-
-def chroma_db_populated() -> bool:
-    """Return if the existence of CHROMA_DB_PATH."""
-
-    try:
-        if not os.path.isdir(CHROMA_DB_PATH):
-            return False
-
-        # Check for any files or subdirectories inside the directory
-        for _ in os.scandir(CHROMA_DB_PATH):
-            return True
-        return False
-    except Exception:
-        return False
-
-
-def get_chunks(text: str) -> list[str]:
+def _get_chunks(text: str) -> list[str]:
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1500,
         chunk_overlap=300,
@@ -38,33 +24,46 @@ def get_chunks(text: str) -> list[str]:
     return text_splitter.split_text(text)
 
 
-def get_embeddings() -> OpenAIEmbeddings:
-    # settings = get_settings()
-    # api_key = getattr(settings, "OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
+def _get_embeddings() -> OpenAIEmbeddings:
+    settings = get_settings()
+    api_key = settings.OPENAI_API_KEY
 
-    return OpenAIEmbeddings(model="text-embedding-3-small")
+    return OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key) #type: ignore
 
 
-def get_vectorstore() -> Chroma:
+def _get_vectorstore() -> Chroma:
     """Load the persisted Chroma vectorstore. If it doesn't exist, this will create a new handle.
 
     Returns a Chroma instance wired with the same embeddings used during ingestion.
     """
-    embeddings = get_embeddings()
+    embeddings = _get_embeddings()
 
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
 
-def retrieve_docs(query: str, k: int = 5) -> List[Document]:
+def retrieve_docs(msgs: list[ClientMessage], k: int = 5) -> List[Document]:
     """Return the top-k documents from the vectorstore for a given query.
 
     This is a thin wrapper so callers (routers/services) can easily fetch
     relevant chunks to be used as context for generation.
     """
-    vectorstore = get_vectorstore()
+    vectorstore = _get_vectorstore()
+
+    query = ""
+    for msg in reversed(msgs):
+        if msg.role == "user":
+            if isinstance(msg.content, str):
+                query = msg.content
+                break
+            elif isinstance(msg.content, list):
+                text_part = next((p.text for p in msg.content if p.type == "text"), None) # type: ignore
+                if text_part:
+                    query = text_part
+                    break
+    if not query:
+        query = "Vestibular Unicamp 2026" # dummy query
 
     return vectorstore.similarity_search(query, k=k)
-
 
 async def create_vector_store(urls: list[str]) -> Chroma:
     """Ingest a list of URLs, split into chunks and persist a Chroma DB.
@@ -75,7 +74,7 @@ async def create_vector_store(urls: list[str]) -> Chroma:
 
     documents = []
     for scrape_result in scrape_results:
-        chunks = get_chunks(scrape_result.text)
+        chunks = _get_chunks(scrape_result.text)
 
         documents.extend(
             [
@@ -91,10 +90,24 @@ async def create_vector_store(urls: list[str]) -> Chroma:
             ]
         )
 
-    embeddings = get_embeddings()
+    embeddings = _get_embeddings()
 
     vectorstore = Chroma.from_documents(
         documents=documents, embedding=embeddings, persist_directory=CHROMA_DB_PATH
     )
 
     return vectorstore
+
+def chroma_db_populated() -> bool:
+    """Return if the existence of CHROMA_DB_PATH."""
+
+    try:
+        if not os.path.isdir(CHROMA_DB_PATH):
+            return False
+
+        # Check for any files or subdirectories inside the directory
+        for _ in os.scandir(CHROMA_DB_PATH):
+            return True
+        return False
+    except Exception:
+        return False
