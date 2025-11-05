@@ -15,6 +15,44 @@ from app.repositories.ai import save_chat
 from app.schemas.ai import ClientMessage
 
 
+def build_context_message_from_documents(
+    docs: list, max_chars: int = 3000
+) -> ChatCompletionMessageParam:
+    """Convert retrieved Documents into a single system message to be prepended
+    to the messages sent to the LLM.
+    """
+    parts: list[str] = []
+    total = 0
+
+    for doc in docs:
+        if total >= max_chars:
+            break
+        text = getattr(doc, "page_content", str(doc)) or ""
+        meta = getattr(doc, "metadata", {}) or {}
+        source = meta.get("source_url") or meta.get("source") or meta.get("url")
+        snippet = text.strip()
+
+        # Limit per-doc so we don't blow past max_chars
+        remaining = max_chars - total
+        if len(snippet) > remaining:
+            snippet = snippet[: remaining - 3] + "..."
+
+        citation = f"[source:{source}] " if source else ""
+        parts.append(f"{citation}{snippet}")
+        total += len(snippet)
+
+    if parts:
+        content = (
+            "Contexto: Use o contexto abaixo para a construção das respostas. "
+            "Use somente dos dados presentes aqui para formular a resposta. Se os dados não forem suficientes, não invente ou use outra informação e indique que a informação não está presente.\n\n"
+            + "\n\n---\n\n".join(parts)
+        )
+    else:
+        content = ""  # no context available
+
+    return {"role": "system", "content": content}
+
+
 def convert_to_openai_messages(
     messages: List[ClientMessage],
 ) -> List[ChatCompletionMessageParam]:
