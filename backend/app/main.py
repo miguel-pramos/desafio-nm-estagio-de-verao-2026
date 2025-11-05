@@ -5,9 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.config.settings import get_settings
-from app.routers import auth, chat, health
-from app.services.embedding import chroma_db_populated, create_vector_store
+from .config.settings import get_settings
+from .routers import auth, chat, health
+from .services.embedding import chroma_db_populated, create_vector_store
 
 
 settings = get_settings()

@@ -100,8 +100,8 @@ async def handle_chat_data(
                 user_query_text = m.content or ""
                 break
     # RAG
-    docs = retrieve_docs(messages)
-    context_msg = build_context_message_from_documents(docs)
+    docs = retrieve_docs(messages, 10)
+    context_msg = build_context_message_from_documents(docs, 10_000)
     openai_messages = [context_msg] + openai_messages
 
     # Track messages for persistence if chat_id is provided
