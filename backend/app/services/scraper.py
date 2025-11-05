@@ -31,7 +31,6 @@ async def scrape(
     client: Optional[httpx.AsyncClient] = None,
     timeout: float = 15.0,
 ) -> list[ScrapeResult]:
-
     created_client = False
 
     if client is None:
@@ -65,7 +64,7 @@ async def scrape(
 
             soup = BeautifulSoup(response.text, "html.parser")
 
-            # Remove tags indesejadas 
+            # Remove tags indesejadas
             for element in soup.find_all(BLOCK_TAGS_TO_REMOVE):
                 element.decompose()
             for element in soup.find_all(STRUCTURAL_TAGS_TO_PRUNE):
@@ -75,7 +74,9 @@ async def scrape(
             text = re.sub(r"\s+", " ", text).strip()
 
             # Extrair título (ainda útil para RAG)
-            title = soup.title.string.strip() if soup.title and soup.title.string else None
+            title = (
+                soup.title.string.strip() if soup.title and soup.title.string else None
+            )
 
             results.append(
                 ScrapeResult(
@@ -86,7 +87,7 @@ async def scrape(
                 )
             )
         return results
-    
+
     except httpx.HTTPStatusError as exc:
         print(f"Erro de HTTP ao buscar {exc.response.url}: {exc.response.status_code}")
         raise

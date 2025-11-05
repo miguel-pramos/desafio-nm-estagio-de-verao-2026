@@ -17,7 +17,9 @@ from app.utils.ai import (
     patch_response_with_headers,
     stream_text,
     stream_text_with_persistence,
+    build_context_message_from_documents,
 )
+from app.services.embedding import retrieve_docs
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -86,6 +88,28 @@ async def handle_chat_data(
             messages = []
 
     openai_messages = convert_to_openai_messages(messages)
+
+    # Find the user query text (prefer request.message if present)
+    user_query_text = ""
+    if request.message and request.message.content:
+        user_query_text = request.message.content
+    elif messages:
+        # assume the last user message is the query
+        for m in reversed(messages):
+            if m.role == "user":
+                user_query_text = m.content or ""
+                break
+
+    if user_query_text:
+        try:
+            docs = retrieve_docs(user_query_text, k=5)
+            if docs:
+                context_msg = build_context_message_from_documents(docs)
+                # Prepend the system context to the openai messages
+                openai_messages = [context_msg] + openai_messages
+        except Exception:
+            # retrieval should be best-effort: ignore errors and proceed
+            pass
 
     # Track messages for persistence if chat_id is provided
     ui_messages = []
