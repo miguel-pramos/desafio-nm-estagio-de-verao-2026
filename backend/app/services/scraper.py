@@ -3,9 +3,13 @@ import httpx
 import re
 from enum import Enum
 from dataclasses import dataclass
+import io
+import tempfile
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 from typing import Optional, Set
+from pypdf import PdfReader
 
 from pydantic import BaseModel, Field
 
@@ -35,6 +39,121 @@ class ScrapeResult:
     text: str
     title: Optional[str]
     status_code: int
+
+
+async def extract_pdf_text(pdf_bytes: bytes, url: str) -> Optional[str]:
+    """Extract text from PDF bytes."""
+
+    try:
+        pdf_file = io.BytesIO(pdf_bytes)
+        reader = PdfReader(pdf_file)
+
+        if len(reader.pages) == 0:
+            print(f"PDF from {url} has no pages")
+            return None
+
+        text_parts = []
+        for page_num, page in enumerate(reader.pages):
+            try:
+                page_text = page.extract_text()
+                if page_text:
+                    text_parts.append(page_text)
+            except Exception as e:
+                print(f"Error extracting text from page {page_num} in {url}: {e}")
+                continue
+
+        if not text_parts:
+            print(f"No text could be extracted from PDF: {url}")
+            return None
+
+        # Join all pages and clean up whitespace
+        full_text = "\n".join(text_parts)
+        full_text = re.sub(r"\s+", " ", full_text).strip()
+
+        return full_text
+
+    except Exception as e:
+        print(f"Error processing PDF from {url}: {e}")
+        return None
+
+
+async def scrape_pdf(
+    url: str,
+    client: httpx.AsyncClient,
+    timeout: float = 15.0,
+) -> Optional[ScrapeResult]:
+    """Download and scrape a PDF document."""
+
+    try:
+        response = await client.get(url, timeout=timeout)
+        response.raise_for_status()
+
+        # Extract text from PDF
+        text = await extract_pdf_text(response.content, url)
+
+        if not text:
+            return None
+
+        # Try to get title from URL or PDF metadata
+        title = None
+        try:
+            reader = PdfReader(io.BytesIO(response.content))
+            metadata = reader.metadata
+            if metadata and metadata.title:
+                title = metadata.title
+        except Exception:
+            pass
+
+        # Fallback to URL-based title
+        if not title:
+            title = Path(urlparse(url).path).stem or "PDF Document"
+
+        return ScrapeResult(
+            url=str(response.url),
+            text=text,
+            title=title,
+            status_code=response.status_code,
+        )
+
+    except httpx.HTTPStatusError as exc:
+        print(
+            f"HTTP Error downloading PDF {exc.response.url}: {exc.response.status_code}"
+        )
+        return None
+    except Exception as e:
+        print(f"Error scraping PDF from {url}: {e}")
+        return None
+
+
+async def scrape_html(
+    url: str,
+    response: httpx.Response,
+) -> Optional[ScrapeResult]:
+    """Scrape HTML content from response."""
+
+    try:
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # remove tags
+        for element in soup.find_all(BLOCK_TAGS_TO_REMOVE):
+            element.decompose()
+        for element in soup.find_all(STRUCTURAL_TAGS_TO_PRUNE):
+            element.decompose()
+
+        text = soup.get_text(separator=" ", strip=True)
+        text = re.sub(r"\s+", " ", text).strip()
+
+        title = soup.title.string.strip() if soup.title and soup.title.string else None
+
+        return ScrapeResult(
+            url=str(response.url),
+            text=text,
+            title=title,
+            status_code=response.status_code,
+        )
+    except Exception as e:
+        print(f"Error scraping HTML from {url}: {e}")
+        return None
 
 
 class URLCrawler:
@@ -75,7 +194,7 @@ class URLCrawler:
             return None
         return url.split("#")[0]
 
-    def _extract_links(self, html: str, current_url: str) -> list[str]:
+    def _extract_links(self, html: str) -> list[str]:
         """Extrai links de um HTML"""
         soup = BeautifulSoup(html, "html.parser")
         links = []
@@ -94,7 +213,7 @@ class URLCrawler:
         client: Optional[httpx.AsyncClient] = None,
         timeout: float = 15.0,
     ) -> list[str]:
-        """Crawl recursively and exctracts urls"""
+        """Crawl recursively and extracts urls (both HTML and PDF)"""
         created_client = False
         if client is None:
             client = httpx.AsyncClient(
@@ -121,23 +240,29 @@ class URLCrawler:
                     response.raise_for_status()
 
                     content_type = response.headers.get("content-type", "")
-                    if "text/html" not in content_type:
+
+                    # Only extract links from HTML documents
+                    if "text/html" in content_type:
+                        # find links
+                        new_links = self._extract_links(response.text)
+
+                        for link in new_links:
+                            if len(discovered_urls) < self.max_urls:
+                                self.to_visit.append((link, depth + 1))
+                    elif "application/pdf" in content_type:
+                        # PDFs are collected but we don't crawl into them
+                        pass
+                    else:
+                        # Skip unsupported content types
                         continue
-
-                    # find links
-                    new_links = self._extract_links(response.text, url)
-
-                    for link in new_links:
-                        if len(discovered_urls) < self.max_urls:
-                            self.to_visit.append((link, depth + 1))
 
                 except Exception as e:
                     print(f"Error processing {url}: {e}")
                     continue
 
-                with open("urls.txt", "w") as f:
-                    f.write("\n".join(discovered_urls))
-                    f.close()
+            with open("urls.txt", "w") as f:
+                f.write("\n".join(discovered_urls))
+                f.close()
 
             return discovered_urls
 
@@ -178,46 +303,32 @@ async def scrape(
             try:
                 response = await client.get(normalized_url)
 
-                # content-tye
+                # Get content type
                 content_type = response.headers.get("content-type", "")
-                if "text/html" not in content_type:
+
+                # Route to appropriate handler based on content type
+                if "application/pdf" in content_type:
+                    result = await scrape_pdf(normalized_url, client, timeout)
+                    if result:
+                        results.append(result)
+                elif "text/html" in content_type:
+                    result = await scrape_html(normalized_url, response)
+                    if result:
+                        results.append(result)
+                else:
                     print(
-                        f"Content type '{content_type}' de '{response.url}' não é HTML."
+                        f"Content type '{content_type}' of '{response.url}' is not supported. "
+                        f"Supported types: text/html, application/pdf"
                     )
                     continue
 
-                soup = BeautifulSoup(response.text, "html.parser")
-
-                # remove tags
-                for element in soup.find_all(BLOCK_TAGS_TO_REMOVE):
-                    element.decompose()
-                for element in soup.find_all(STRUCTURAL_TAGS_TO_PRUNE):
-                    element.decompose()
-
-                text = soup.get_text(separator=" ", strip=True)
-                text = re.sub(r"\s+", " ", text).strip()
-
-                title = (
-                    soup.title.string.strip()
-                    if soup.title and soup.title.string
-                    else None
-                )
-                
-                results.append(
-                    ScrapeResult(
-                        url=str(response.url),  
-                        text=text,
-                        title=title,
-                        status_code=response.status_code,
-                    )
-                )
             except httpx.HTTPStatusError as exc:
                 print(
                     f"HTTP Error searching {exc.response.url}: {exc.response.status_code}"
                 )
                 continue
             except (httpx.HTTPError, ValueError, Exception) as exc:
-                print(f"Error procesing {normalized_url}: {exc}")
+                print(f"Error processing {normalized_url}: {exc}")
                 continue
 
         return results

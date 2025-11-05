@@ -23,6 +23,7 @@ dependencies = [
     "langchain-chroma>=1.0.0",
     "onnxruntime>=1.23.2",
     "asyncpg>=0.30.0",
+    "pypdf>=4.0.0",
 ]
 
 [dependency-groups]
