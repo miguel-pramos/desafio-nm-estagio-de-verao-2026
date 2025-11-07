@@ -12,8 +12,9 @@ import { type Metadata, type Viewport } from "next";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ChatSidebar } from "@/components/ai/chat-sidebar";
+import { ChatSidebar, type ChatSummary } from "@/components/ai/chat-sidebar";
 import { getUserChats } from "@/lib/api/ai";
+import { getUser } from "@/lib/api/auth";
 
 export const metadata: Metadata = {
   title: "Unicamp VestIA",
@@ -36,18 +37,30 @@ const geist = Geist({
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const listResp = await getUserChats();
+  // Check if user is authenticated before fetching chats
+  const user = await getUser();
+  let chats: ChatSummary[] = [];
 
-  const chats: ChatSummary[] = (listResp?.chats ?? []).map((c) => ({
-    id: c.id,
-    preview: c.preview ?? undefined,
-    lastRole: (c as any).lastRole ?? undefined,
-    // Ensure updatedAt is a string (the sidebar expects ISO string)
-    updatedAt:
-      c.updatedAt instanceof Date
-        ? c.updatedAt.toISOString()
-        : String(c.updatedAt),
-  }));
+  // Only fetch chats for authenticated users (not on sign-in page)
+  if (user) {
+    try {
+      const listResp = await getUserChats();
+      chats = (listResp?.chats ?? []).map((c) => ({
+        id: c.id,
+        preview: c.preview ?? undefined,
+        lastRole: (c as any).lastRole ?? undefined,
+        // Ensure updatedAt is a string (the sidebar expects ISO string)
+        updatedAt:
+          c.updatedAt instanceof Date
+            ? c.updatedAt.toISOString()
+            : String(c.updatedAt),
+      }));
+    } catch (error) {
+      // If fetching chats fails, continue with empty chats
+      console.error("Failed to fetch chats:", error);
+      chats = [];
+    }
+  }
 
   return (
     <html lang="pt-BR" className={`${geist.variable}`}>
