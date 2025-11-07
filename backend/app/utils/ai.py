@@ -45,7 +45,7 @@ def build_context_message_from_documents(
         content = (
             "Você é um assistente de IA focado em responder perguntas sobre o vestibular da Unicamp.\n"
             "Use **apenas** as seguintes partes de contexto para responder à pergunta do usuário.\n"
-            'Se você não sabe a resposta com base no contexto, apenas afirme que não sabe a resposta\n.'
+            'Se você não sabe a resposta com base no contexto, apenas afirme que não sabe a resposta dizendo: "Não sei falar sobre esse tema."\n.'
             "Contexto:"
         ) + "\n\n---\n\n".join(parts)
     else:

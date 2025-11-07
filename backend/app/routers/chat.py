@@ -1,25 +1,26 @@
 import uuid
+from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from openai import BaseModel
 
-from app.config import AVAILABLE_TOOLS, TOOL_DEFINITIONS
-from app.config.ai import OpenAIClientDep
-from app.config.auth import UserDep
-from app.config.db import SessionDep
-from app.config.settings import SettingsDep
-from app.repositories.ai import create_chat, load_chat
-from app.schemas.ai import ClientMessage, ClientMessagePart
-from app.utils.ai import (
+from ..config import AVAILABLE_TOOLS, TOOL_DEFINITIONS
+from ..config.ai import OpenAIClientDep
+from ..config.auth import UserDep
+from ..config.db import SessionDep
+from ..config.settings import SettingsDep
+from ..repositories.ai import create_chat, list_chats, load_chat
+from ..schemas.ai import ClientMessage, ClientMessagePart
+from ..utils.ai import (
     convert_to_openai_messages,
     patch_response_with_headers,
     stream_text,
     stream_text_with_persistence,
     build_context_message_from_documents,
 )
-from app.services.embedding import retrieve_docs
+from ..services.embedding import retrieve_docs
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -179,6 +180,39 @@ async def create_new_chat(
 class GetChatMessagesResponse(BaseModel):
     id: str
     messages: List[dict[str, Any]]
+
+
+class ChatSummary(BaseModel):
+    id: str
+    preview: Optional[str] = None
+    last_role: Optional[str] = None
+    updated_at: datetime
+
+
+class ListChatsResponse(BaseModel):
+    chats: List[ChatSummary]
+
+
+@router.get("", response_model=ListChatsResponse)
+async def get_user_chats(
+    session: SessionDep,
+    user: UserDep,
+    limit: Optional[int] = Query(None, ge=1, le=100),
+):
+    """Return chat summaries for the authenticated user."""
+
+    summaries = list_chats(session, user.id, limit)
+    return ListChatsResponse(
+        chats=[
+            ChatSummary(
+                id=item["id"],
+                preview=item.get("preview"),
+                last_role=item.get("last_role"),
+                updated_at=item["updated_at"],
+            )
+            for item in summaries
+        ]
+    )
 
 
 @router.get("/{chat_id}", response_model=GetChatMessagesResponse)

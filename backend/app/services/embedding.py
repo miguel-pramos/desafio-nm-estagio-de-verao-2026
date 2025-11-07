@@ -15,7 +15,7 @@ CHROMA_DB_PATH = "./chroma_db"
 
 def _get_chunks(text: str) -> list[str]:
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1500,
+        chunk_size=1024,
         chunk_overlap=300,
         separators=["\n\n", "\n", " ", ""],
         length_function=len,

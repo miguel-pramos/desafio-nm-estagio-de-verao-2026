@@ -4,8 +4,8 @@ from typing import Any, List
 
 from sqlmodel import col, delete, select
 
-from app.config.db import SessionDep
-from app.models import Chat, Message
+from ..config.db import SessionDep
+from ..models import Chat, Message
 
 
 def create_chat(session: SessionDep, user_id: int):
@@ -92,3 +92,54 @@ def save_chat(
         session.add(message)
 
     session.commit()
+
+
+def list_chats(
+    session: SessionDep,
+    user_id: int,
+    limit: int | None = None,
+) -> List[dict[str, Any]]:
+    """Return chat summaries for a user ordered by recent activity."""
+
+    statement = (
+        select(Chat)
+        .where(Chat.user_id == user_id)
+        .order_by(col(Chat.created_at).desc())
+    )
+
+    if limit:
+        statement = statement.limit(limit)
+
+    chats = session.exec(statement).all()
+
+    summaries: List[dict[str, Any]] = []
+    for chat in chats:
+        last_message_statement = (
+            select(Message)
+            .where(Message.chat_id == chat.id)
+            .order_by(col(Message.created_at).desc())
+            .limit(1)
+        )
+        last_message = session.exec(last_message_statement).first()
+
+        preview = ""
+        last_role = None
+        updated_at = chat.created_at
+
+        if last_message is not None:
+            preview = last_message.content or ""
+            last_role = last_message.role
+            updated_at = last_message.created_at
+
+        summaries.append(
+            {
+                "id": chat.id,
+                "preview": preview,
+                "last_role": last_role,
+                "updated_at": updated_at,
+            }
+        )
+
+    summaries.sort(key=lambda item: item["updated_at"], reverse=True)
+
+    return summaries
