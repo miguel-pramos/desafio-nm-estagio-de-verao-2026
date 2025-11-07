@@ -9,6 +9,7 @@ from langchain_openai import OpenAIEmbeddings
 from ..schemas.ai import ClientMessage
 from ..config.settings import get_settings
 from .scraper import scrape
+from .query_rewriter import get_query_rewriter, RewriteStrategy
 
 
 CHROMA_DB_PATH = "./chroma_db"
@@ -41,7 +42,12 @@ def _get_vectorstore() -> Chroma:
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
 
-def retrieve_docs(msgs: list[ClientMessage], k: int = 5) -> List[Document]:
+def retrieve_docs(
+    msgs: list[ClientMessage],
+    k: int = 5,
+    use_query_rewriting: bool = True,
+    rewrite_strategy: RewriteStrategy = RewriteStrategy.COMBINED,
+) -> List[Document]:
     """Return the top-k documents from the vectorstore for a given query.
 
     This is a thin wrapper so callers (routers/services) can easily fetch
@@ -49,6 +55,7 @@ def retrieve_docs(msgs: list[ClientMessage], k: int = 5) -> List[Document]:
     """
     vectorstore = _get_vectorstore()
 
+    # Extract the user query from messages
     query = ""
     for msg in reversed(msgs):
         if msg.role == "user":
@@ -62,8 +69,46 @@ def retrieve_docs(msgs: list[ClientMessage], k: int = 5) -> List[Document]:
                     break
     if not query:
         query = "Vestibular Unicamp 2026" # dummy query
-
-    return vectorstore.similarity_search(query, k=k)
+    
+    # Apply query rewriting if enabled
+    queries_to_search = [query]
+    if use_query_rewriting:
+        rewriter = get_query_rewriter()
+        queries_to_search.extend(rewriter.rewrite(query, strategy=rewrite_strategy))
+    
+    print(queries_to_search)
+    
+    # Perform similarity search with original query
+    # Then collect additional results from rewritten queries
+    all_docs = {}  # Use dict to deduplicate by content
+    doc_scores = {}  # Track best score for each document
+    
+    for search_query in queries_to_search:
+        try:
+            # Get results for this query variation
+            results = vectorstore.similarity_search_with_score(search_query, k=k)
+            
+            for doc, score in results:
+                # Use page content as key for deduplication
+                doc_key = doc.page_content[:100]  # Use first 100 chars as key
+                
+                # Keep the document with the best (lowest) score
+                if doc_key not in doc_scores or score < doc_scores[doc_key]:
+                    all_docs[doc_key] = doc
+                    doc_scores[doc_key] = score
+                    
+        except Exception:
+            continue
+    
+    # Sort by score and return top k
+    sorted_docs = sorted(
+        [(doc, score) for doc, score in zip(all_docs.values(), doc_scores.values())],
+        key=lambda x: x[1]
+    )
+    
+    result = [doc for doc, _ in sorted_docs[:k]]
+    
+    return result
 
 async def create_vector_store(base_url: str) -> Chroma:
     """Ingest a list of URLs, split into chunks and persist a Chroma DB.

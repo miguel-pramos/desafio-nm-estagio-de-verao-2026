@@ -10,9 +10,9 @@ from openai import OpenAI
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from sqlmodel import Session
 
-from app.config.db import engine
-from app.repositories.ai import save_chat
-from app.schemas.ai import ClientMessage
+from ..config.db import engine
+from ..repositories.ai import save_chat
+from ..schemas.ai import ClientMessage
 
 
 def build_context_message_from_documents(
@@ -43,10 +43,19 @@ def build_context_message_from_documents(
 
     if parts:
         content = (
-            "Você é um assistente de IA focado em responder perguntas sobre o vestibular da Unicamp.\n"
-            "Use **apenas** as seguintes partes de contexto para responder à pergunta do usuário.\n"
-            'Se você não sabe a resposta com base no contexto, apenas afirme que não sabe a resposta dizendo: "Não sei falar sobre esse tema."\n.'
-            "Contexto:"
+            "# Você é um assistente especializado em responder perguntas sobre o Vestibular da Unicamp 2026.\n\n"
+            "## INSTRUÇÕES CRÍTICAS:\n"
+            "1. Use **APENAS** as informações fornecidas no contexto abaixo\n"
+            "2. Estruture suas respostas de forma clara e organizada\n"
+            "3. **SEMPRE** forneça informações específicas (datas, valores, números) quando disponíveis\n"
+            "4. Combine informações de múltiplas seções do contexto quando necessário para dar resposta completa\n"
+            "5. Responda com pelo menos 2-3 frases para garantir completude\n"
+            "6. Se houver múltiplos pontos relevantes, use listas ou parágrafos bem definidos\n"
+            "7. Cite a fonte quando disponível para aumentar credibilidade\n\n"
+            "## REGRA DE OURO:\n"
+            "Se a resposta estiver incompleta no contexto, indique claramente o que está faltando.\n"
+            "Se realmente não souber a resposta, diga apenas: \"Não tenho informações sobre esse tema com os dados disponíveis.\"\n\n"
+            "## CONTEXTO FORNECIDO:\n"
         ) + "\n\n---\n\n".join(parts)
     else:
         content = ""  # no context available
