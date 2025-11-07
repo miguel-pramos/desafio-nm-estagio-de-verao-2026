@@ -18,3 +18,14 @@ export async function getChatMessages(chatId: string) {
     },
   );
 }
+
+export async function getUserChats(limit?: number ) {
+  const headersList = await headers();
+  return chatApi.getUserChatsChatGet(
+    { limit },
+    {
+      headers: headersList,
+      cache: "no-store",
+    },
+  );
+}

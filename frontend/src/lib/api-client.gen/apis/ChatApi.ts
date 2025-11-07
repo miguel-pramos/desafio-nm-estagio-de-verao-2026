@@ -20,6 +20,7 @@ import type {
   CreateNewChatResponse,
   GetChatMessagesResponse,
   HTTPValidationError,
+  ListChatsResponse,
 } from '../models/index';
 import {
     ChatRequestFromJSON,
@@ -30,10 +31,16 @@ import {
     GetChatMessagesResponseToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    ListChatsResponseFromJSON,
+    ListChatsResponseToJSON,
 } from '../models/index';
 
 export interface GetChatMessagesChatChatIdGetRequest {
     chatId: string;
+}
+
+export interface GetUserChatsChatGetRequest {
+    limit?: number | null;
 }
 
 export interface HandleChatDataChatPostRequest {
@@ -113,6 +120,41 @@ export class ChatApi extends runtime.BaseAPI {
      */
     async getChatMessagesChatChatIdGet(requestParameters: GetChatMessagesChatChatIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetChatMessagesResponse> {
         const response = await this.getChatMessagesChatChatIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Return chat summaries for the authenticated user.
+     * Get User Chats
+     */
+    async getUserChatsChatGetRaw(requestParameters: GetUserChatsChatGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ListChatsResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/chat`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ListChatsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Return chat summaries for the authenticated user.
+     * Get User Chats
+     */
+    async getUserChatsChatGet(requestParameters: GetUserChatsChatGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ListChatsResponse> {
+        const response = await this.getUserChatsChatGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

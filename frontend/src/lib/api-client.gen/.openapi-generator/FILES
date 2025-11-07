@@ -4,12 +4,14 @@ apis/HealthApi.ts
 apis/index.ts
 index.ts
 models/ChatRequest.ts
+models/ChatSummary.ts
 models/ClientAttachment.ts
 models/ClientMessage.ts
 models/ClientMessagePart.ts
 models/CreateNewChatResponse.ts
 models/GetChatMessagesResponse.ts
 models/HTTPValidationError.ts
+models/ListChatsResponse.ts
 models/ToolInvocation.ts
 models/ToolInvocationState.ts
 models/UserCreated.ts

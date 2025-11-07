@@ -10,5 +10,9 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const { id } = await params;
   const data = await getChatMessages(id);
 
-  return <Chat id={id} initialMessages={data.messages as UIMessage[]} />;
+  return (
+    <div className="flex flex-1 justify-center overflow-y-auto px-4 pb-20 md:px-10">
+      <Chat id={id} initialMessages={data.messages as UIMessage[]} />
+    </div>
+  );
 }
