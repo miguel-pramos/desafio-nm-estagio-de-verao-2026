@@ -48,7 +48,7 @@ export default async function RootLayout({
       chats = (listResp?.chats ?? []).map((c) => ({
         id: c.id,
         preview: c.preview ?? undefined,
-        lastRole: (c as any).lastRole ?? undefined,
+        lastRole: c.lastRole ?? undefined,
         // Ensure updatedAt is a string (the sidebar expects ISO string)
         updatedAt:
           c.updatedAt instanceof Date
