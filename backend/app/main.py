@@ -34,6 +34,8 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.JWT_SECRET,  # Reuse JWT secret for session signing
+    same_site="none",
+    https_only=True,
 )
 
 app.add_middleware(

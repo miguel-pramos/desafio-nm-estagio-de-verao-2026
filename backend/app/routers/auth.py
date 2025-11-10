@@ -2,12 +2,12 @@ from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 from starlette.requests import Request
 
-from app.config.auth import JWT_ALG, JWT_EXP_MINUTES, UserDep, oauth
-from app.config.db import SessionDep
-from app.config.settings import SettingsDep
-from app.repositories.auth import get_or_create_user
-from app.schemas.auth import UserCreated
-from app.utils.auth import create_jwt, delete_jwt_cookie, set_jwt_cookie
+from ..config.auth import JWT_ALG, JWT_EXP_MINUTES, UserDep, oauth
+from ..config.db import SessionDep
+from ..config.settings import SettingsDep
+from ..repositories.auth import get_or_create_user
+from ..schemas.auth import UserCreated
+from ..utils.auth import create_jwt, delete_jwt_cookie, set_jwt_cookie
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
