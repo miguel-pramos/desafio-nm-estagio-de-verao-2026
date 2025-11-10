@@ -8,9 +8,10 @@ import {
 
 // Use the internal URL on the server (inside Docker), and the public URL in the browser
 const isServer = typeof window === "undefined";
+
 const API_URL =
   isServer && env.NODE_ENV === "production"
-    ? process.env.INTERNAL_API_URL!
+    ? (process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL!)
     : process.env.NEXT_PUBLIC_API_URL!;
 
 export const config = new Configuration({
