@@ -101,7 +101,8 @@ async def handle_chat_data(
                 user_query_text = m.content or ""
                 break
     # RAG
-    docs = retrieve_docs(messages, 7)
+    # Pass explicit user query text to retrieve_docs to avoid ambiguity about message order
+    docs = retrieve_docs(messages, 7, query=user_query_text)
     context_msg = build_context_message_from_documents(docs, 10_000)
     openai_messages = [context_msg] + openai_messages
 

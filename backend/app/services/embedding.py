@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -8,11 +8,12 @@ from langchain_openai import OpenAIEmbeddings
 
 from ..schemas.ai import ClientMessage
 from ..config.settings import get_settings
-from .scraper import scrape
+from .scraper import scrape, CrawlStrategy
 from .query_rewriter import get_query_rewriter, RewriteStrategy
 
 
 CHROMA_DB_PATH = "./chroma_db"
+
 
 def _get_chunks(text: str) -> list[str]:
     text_splitter = RecursiveCharacterTextSplitter(
@@ -29,7 +30,7 @@ def _get_embeddings() -> OpenAIEmbeddings:
     settings = get_settings()
     api_key = settings.OPENAI_API_KEY
 
-    return OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key) #type: ignore
+    return OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)  # type: ignore
 
 
 def _get_vectorstore() -> Chroma:
@@ -47,6 +48,7 @@ def retrieve_docs(
     k: int = 5,
     use_query_rewriting: bool = True,
     rewrite_strategy: RewriteStrategy = RewriteStrategy.COMBINED,
+    query: Optional[str] = None,
 ) -> List[Document]:
     """Return the top-k documents from the vectorstore for a given query.
 
@@ -55,67 +57,69 @@ def retrieve_docs(
     """
     vectorstore = _get_vectorstore()
 
-    # Extract the user query from messages
-    query = ""
-    for msg in reversed(msgs):
-        if msg.role == "user":
-            if isinstance(msg.content, str):
-                query = msg.content
-                break
-            elif isinstance(msg.content, list):
-                text_part = next((p.text for p in msg.content if p.type == "text"), None) # type: ignore
-                if text_part:
-                    query = text_part
+    # If an explicit query was provided, use it; otherwise extract from messages
+    if query and isinstance(query, str) and query.strip():
+        selected_query = query
+    else:
+        selected_query = ""
+        for msg in reversed(msgs):
+            if msg.role == "user":
+                if isinstance(msg.content, str):
+                    selected_query = msg.content
                     break
-    if not query:
-        query = "Vestibular Unicamp 2026" # dummy query
-    
+                elif isinstance(msg.content, list):
+                    text_part = next((p.text for p in msg.content if p.type == "text"), None)  # type: ignore
+                    if text_part:
+                        selected_query = text_part
+                        break
+        if not selected_query:
+            selected_query = "Vestibular Unicamp 2026"  # dummy query
+
     # Apply query rewriting if enabled
-    queries_to_search = [query]
+    queries_to_search = [selected_query]
     if use_query_rewriting:
         rewriter = get_query_rewriter()
-        queries_to_search.extend(rewriter.rewrite(query, strategy=rewrite_strategy))
-    
-    print(queries_to_search)
-    
+        rewriter.rewrite(selected_query, strategy=rewrite_strategy)
+
     # Perform similarity search with original query
     # Then collect additional results from rewritten queries
     all_docs = {}  # Use dict to deduplicate by content
     doc_scores = {}  # Track best score for each document
-    
+
     for search_query in queries_to_search:
         try:
             # Get results for this query variation
             results = vectorstore.similarity_search_with_score(search_query, k=k)
-            
+
             for doc, score in results:
                 # Use page content as key for deduplication
                 doc_key = doc.page_content[:100]  # Use first 100 chars as key
-                
+
                 # Keep the document with the best (lowest) score
                 if doc_key not in doc_scores or score < doc_scores[doc_key]:
                     all_docs[doc_key] = doc
                     doc_scores[doc_key] = score
-                    
+
         except Exception:
             continue
-    
+
     # Sort by score and return top k
     sorted_docs = sorted(
         [(doc, score) for doc, score in zip(all_docs.values(), doc_scores.values())],
-        key=lambda x: x[1]
+        key=lambda x: x[1],
     )
-    
+
     result = [doc for doc, _ in sorted_docs[:k]]
-    
+
     return result
+
 
 async def create_vector_store(base_url: str) -> Chroma:
     """Ingest a list of URLs, split into chunks and persist a Chroma DB.
 
     Note: embeddings are created with the configured OPENAI API key.
     """
-    scrape_results = await scrape(base_url)
+    scrape_results = await scrape(base_url, strategy=CrawlStrategy.STATIC)
 
     documents = []
     for scrape_result in scrape_results:
@@ -142,6 +146,7 @@ async def create_vector_store(base_url: str) -> Chroma:
     )
 
     return vectorstore
+
 
 def chroma_db_populated() -> bool:
     """Return if the existence of CHROMA_DB_PATH."""

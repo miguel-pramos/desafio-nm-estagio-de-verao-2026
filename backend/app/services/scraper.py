@@ -276,6 +276,7 @@ async def scrape(
     *,
     client: Optional[httpx.AsyncClient] = None,
     timeout: float = 15.0,
+    strategy: CrawlStrategy = CrawlStrategy.RECURSIVE,
 ) -> list[ScrapeResult]:
     created_client = False
 
@@ -290,9 +291,14 @@ async def scrape(
         client = client
 
     try:
-        crawler = URLCrawler(base_url)
-        urls = await crawler.crawl(client)
+        # Se a estratégia for estática, use apenas o link fornecido.
+        if strategy == CrawlStrategy.STATIC:
+            urls = [base_url]
+        else:
+            crawler = URLCrawler(base_url)
+            urls = await crawler.crawl(client)
 
+        # Normaliza cada URL para garantir esquema (http/https) quando ausente
         normalized_urls = [
             url if re.match(r"^https?://", url) else f"https://{url}" for url in urls
         ]
