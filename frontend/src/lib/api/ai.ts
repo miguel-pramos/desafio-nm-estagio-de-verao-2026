@@ -1,5 +1,6 @@
 import { chatApi } from "@/lib/fastapi-client";
 import { headers } from "next/headers";
+import { object } from "zod/v4";
 
 export async function createChat() {
   const headersList = new Headers(await headers());
@@ -9,7 +10,7 @@ export async function createChat() {
 }
 
 export async function getChatMessages(chatId: string) {
-  const headersList = new Headers(await headers());
+  const headersList = Object.fromEntries(await headers());
   return chatApi.getChatMessagesChatChatIdGet(
     { chatId },
     {
@@ -20,7 +21,7 @@ export async function getChatMessages(chatId: string) {
 }
 
 export async function getUserChats(limit?: number) {
-  const headersList = new Headers(await headers());
+  const headersList = Object.fromEntries(await headers());
   return chatApi.getUserChatsChatGet(
     { limit },
     {
