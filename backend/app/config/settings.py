@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str = "github-client-id"
     GITHUB_CLIENT_SECRET: str = "github-client-secret"
     JWT_SECRET: str = "jwt-secret"
+    # Optional cookie domain for production (e.g. ".example.com" to allow subdomains)
+    COOKIE_DOMAIN: str | None = None
 
     # Database Configuration
     DATABASE_URL: str = "postgresql+psycopg2://user:pass@host:5432/dbname"

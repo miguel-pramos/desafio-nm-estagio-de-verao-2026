@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, Response
 from jose import JWTError, jwt
 
-from app.config.settings import SettingsDep
+from ..config.settings import SettingsDep
 
 
 def create_jwt(
@@ -48,6 +48,7 @@ def set_jwt_cookie(resp: Response, settings: SettingsDep, token: str, exp_minute
         samesite=samesite,
         max_age=exp_minutes * 60,
         path="/",
+        domain=settings.FRONTEND_URL,
     )
 
 
