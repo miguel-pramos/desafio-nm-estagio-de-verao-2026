@@ -38,17 +38,16 @@ def set_jwt_cookie(resp: Response, settings: SettingsDep, token: str, exp_minute
     # send the cookie on cross-site requests (frontend <-> backend on different
     # origins). In development keep Lax for easier local testing.
     secure = settings.ENV == "production"
-    samesite = "none" if secure else "lax"
+    samesite = "None" if secure else "lax"
 
     resp.set_cookie(
         "access_token",
         token,
         httponly=True,
         secure=secure,
-        samesite=samesite,
+        samesite=samesite,  # type: ignore
         max_age=exp_minutes * 60,
         path="/",
-        domain=".vercel.app" if settings.ENV == "production" else None,
     )
 
 
