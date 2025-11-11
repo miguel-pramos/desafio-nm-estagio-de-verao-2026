@@ -36,7 +36,7 @@ async def github_login(request: Request):
 
 
 @router.get("/github/callback")
-async def github_callback_client(
+async def github_callback(
     request: Request, settings: SettingsDep, session: SessionDep
 ):
     """Handle GitHub OAuth callback but redirect to frontend with token in querystring.
