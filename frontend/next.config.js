@@ -10,12 +10,10 @@ const config = {
   
 };
 
-module.exports = {
-  async rewrites() {
+export async function rewrites() {
     return [
       { source: '/api/:path*', destination: 'https://desafio-nm-estagio-de-verao-2026-production.up.railway.app/:path*' },
     ];
-  },
-};
+  }
 
 export default config;
