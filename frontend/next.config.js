@@ -7,6 +7,15 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
   output: "standalone",
+  
+};
+
+module.exports = {
+  async rewrites() {
+    return [
+      { source: '/api/:path*', destination: 'https://desafio-nm-estagio-de-verao-2026-production.up.railway.app/:path*' },
+    ];
+  },
 };
 
 export default config;
