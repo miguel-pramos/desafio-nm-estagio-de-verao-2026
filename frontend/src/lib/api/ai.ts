@@ -1,5 +1,4 @@
 import { chatApi } from "@/lib/fastapi-client";
-import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { headers } from "next/headers";
 
 export async function createChat() {

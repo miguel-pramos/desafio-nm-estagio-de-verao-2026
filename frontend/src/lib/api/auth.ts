@@ -3,7 +3,7 @@ import { authApi } from "@/lib/fastapi-client";
 import { headers } from "next/headers";
 
 export async function getUser() {
-  const headersList = new Headers(await headers());
+  const headersList = Object.fromEntries(await headers());
 
   try {
     return await authApi.meAuthMeGet({

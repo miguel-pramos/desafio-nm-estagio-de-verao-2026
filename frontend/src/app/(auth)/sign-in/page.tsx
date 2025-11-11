@@ -11,7 +11,8 @@ import { redirect } from "next/navigation";
 
 export default async function SignInPage() {
   const user = await getUser();
-
+  console.debug("User: ", user)
+  
   if (user) {
     redirect("/");
   }
