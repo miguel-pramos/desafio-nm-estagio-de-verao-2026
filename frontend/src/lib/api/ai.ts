@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 
 export async function createChat() {
   const headersList = await headers();
-  console.log(headersList);
+  console.log("createChat: ",headersList);
 
   return chatApi.createNewChatChatCreatePost({
     headers: headersList,
@@ -13,7 +13,7 @@ export async function createChat() {
 
 export async function getChatMessages(chatId: string) {
   const headersList: ReadonlyHeaders = await headers();
-  console.log(headers);
+  console.log("getChatMessages: ",headersList);
 
   return chatApi.getChatMessagesChatChatIdGet(
     { chatId },
@@ -26,7 +26,7 @@ export async function getChatMessages(chatId: string) {
 
 export async function getUserChats(limit?: number) {
   const headersList = await headers();
-  console.log(headersList);
+  console.log("getUserChats: ", headersList);
 
   return chatApi.getUserChatsChatGet(
     { limit },
