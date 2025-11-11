@@ -48,7 +48,6 @@ def set_jwt_cookie(resp: Response, settings: SettingsDep, token: str, exp_minute
         samesite=samesite,
         max_age=exp_minutes * 60,
         path="/",
-        domain=settings.FRONTEND_URL,
     )
 
 
