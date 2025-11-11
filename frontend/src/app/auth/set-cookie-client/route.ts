@@ -4,12 +4,14 @@ import type { NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  const redirectTo = "/";
+  const redirectTo = "/chat";
 
   // If no token provided, just redirect home
   if (!token) return NextResponse.redirect(new URL(redirectTo, request.url));
 
   const res = NextResponse.redirect(new URL(redirectTo, request.url));
+
+  console.log("Receveid")
 
   // Set HTTP-only cookie with reasonable defaults
   res.cookies.set({
