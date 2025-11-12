@@ -1,8 +1,9 @@
 import { DefaultChatTransport } from "ai";
+import { getApiBaseUrl, joinApi } from "@/lib/url";
 
 export function createFastapiChatTransport() {
   return new DefaultChatTransport({
-    api: `${process.env.NEXT_PUBLIC_API_URL}/chat`,
+    api: joinApi(getApiBaseUrl(), "/chat"),
     credentials: "include",
     // Only send the last message to the server
     prepareSendMessagesRequest({ messages, id }) {
