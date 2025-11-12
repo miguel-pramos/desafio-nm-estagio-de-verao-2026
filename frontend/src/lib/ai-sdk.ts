@@ -1,9 +1,9 @@
 import { DefaultChatTransport } from "ai";
-import { getApiBaseUrl, joinApi } from "@/lib/url";
 
 export function createFastapiChatTransport() {
   return new DefaultChatTransport({
-    api: joinApi(getApiBaseUrl(), "/chat"),
+    // Use Next.js API route as a proxy to avoid cross-origin cookie issues
+    api: "/api/chat",
     credentials: "include",
     // Only send the last message to the server
     prepareSendMessagesRequest({ messages, id }) {
