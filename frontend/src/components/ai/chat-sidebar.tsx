@@ -82,7 +82,6 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
               ) : (
                 chats.map((chat, index) => {
                   const title = buildChatTitle(chat.preview, index);
-                  const preview = buildChatPreview(chat.preview);
                   const relativeTime = formatRelativeTime(chat.updatedAt);
 
                   return (
@@ -102,16 +101,13 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
                             <span className="bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-md">
                               <MessageSquare className="size-4" />
                             </span>
-                            <span className="group-data-[collapsible=icon]:hidden">
-                              <span className="text-sidebar-foreground block text-sm leading-tight font-medium">
+                            <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                              <span className="text-sidebar-foreground block truncate text-sm leading-tight font-medium">
                                 {title}
-                              </span>
-                              <span className="text-sidebar-foreground/70 block text-xs">
-                                {preview}
                               </span>
                             </span>
                             {relativeTime && (
-                              <span className="text-sidebar-foreground/60 ml-auto text-[10px] tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+                              <span className="text-sidebar-foreground/60 ml-auto shrink-0 text-[10px] tracking-wide uppercase group-data-[collapsible=icon]:hidden">
                                 {relativeTime}
                               </span>
                             )}
@@ -152,20 +148,6 @@ function buildChatTitle(preview: string | undefined, index: number) {
   return `Conversa ${index + 1}`;
 }
 
-function buildChatPreview(preview: string | undefined) {
-  const base = preview?.trim();
-  if (!base) {
-    return "Sem mensagens recentes.";
-  }
-
-  const normalized = base.replace(/\s+/g, " ");
-  return normalized.length > 90 ? `${normalized.slice(0, 90)}…` : normalized;
-}
-
-const RELATIVE_TIME_FORMATTER = new Intl.RelativeTimeFormat("pt-BR", {
-  numeric: "auto",
-});
-
 function formatRelativeTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -179,32 +161,31 @@ function formatRelativeTime(value: string) {
     return "agora";
   }
 
-  if (Math.abs(diffMinutes) < 60) {
-    return RELATIVE_TIME_FORMATTER.format(diffMinutes, "minute");
+  const absMinutes = Math.abs(diffMinutes);
+  let amount: number;
+  let unit: string;
+
+  if (absMinutes < 60) {
+    amount = absMinutes;
+    unit = "m";
+  } else if (absMinutes < 60 * 24) {
+    amount = Math.round(absMinutes / 60);
+    unit = "h";
+  } else if (absMinutes < 60 * 24 * 7) {
+    amount = Math.round(absMinutes / (60 * 24));
+    unit = "d";
+  } else if (absMinutes < 60 * 24 * 30) {
+    amount = Math.round(absMinutes / (60 * 24 * 7));
+    unit = "sem";
+  } else if (absMinutes < 60 * 24 * 365) {
+    amount = Math.round(absMinutes / (60 * 24 * 30));
+    unit = "mes";
+  } else {
+    amount = Math.round(absMinutes / (60 * 24 * 365));
+    unit = "a";
   }
 
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) {
-    return RELATIVE_TIME_FORMATTER.format(diffHours, "hour");
-  }
-
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 7) {
-    return RELATIVE_TIME_FORMATTER.format(diffDays, "day");
-  }
-
-  const diffWeeks = Math.round(diffDays / 7);
-  if (Math.abs(diffWeeks) < 5) {
-    return RELATIVE_TIME_FORMATTER.format(diffWeeks, "week");
-  }
-
-  const diffMonths = Math.round(diffDays / 30);
-  if (Math.abs(diffMonths) < 12) {
-    return RELATIVE_TIME_FORMATTER.format(diffMonths, "month");
-  }
-
-  const diffYears = Math.round(diffDays / 365);
-  return RELATIVE_TIME_FORMATTER.format(diffYears, "year");
+  return diffMinutes < 0 ? `há ${amount}${unit}` : `em ${amount}${unit}`;
 }
 
 export { ChatSidebar };
