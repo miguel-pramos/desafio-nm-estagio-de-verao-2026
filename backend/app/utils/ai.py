@@ -10,6 +10,7 @@ from openai import OpenAI
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from sqlmodel import Session
 
+from ..config import settings
 from ..config.db import engine
 from ..repositories.ai import save_chat
 from ..schemas.ai import ClientMessage
@@ -62,6 +63,32 @@ def build_context_message_from_documents(
 
     return {"role": "system", "content": content}
 
+def build_title_from_query(
+    client: OpenAI,
+    query: str,
+) -> str:
+    """Generate a chat title based on the user's first message."""
+    prompt = (
+        "Você é um assistente gerador de títulos para conversas com um chatbot sobre o Vestibular 2026 da Universidade de Campinas (Unicamp).\n\n"
+        "Gere um texto descritivo e conciso que possa servir como título para uma conversa de chat relacionada ao tema.\n\n"
+        "O título deve ser breve (não mais de 10 palavras), informativo e capturar a essência da consulta do usuário.\n\n"
+        f"Mensagem do Usuário: {query}\n\n"
+        "Título:"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Você é um assistente gerador de títulos."},
+            {"role": "user", "content": prompt},
+        ],
+        max_completion_tokens=16,
+        temperature=0.7,
+        n=1,
+    )
+
+    title = response.choices[0].message.content.strip()
+    return title
 
 def convert_to_openai_messages(
     messages: List[ClientMessage],

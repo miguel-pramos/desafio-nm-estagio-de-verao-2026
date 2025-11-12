@@ -21,7 +21,7 @@ def load_chat(
     session: SessionDep,
     chat_id: str,
     user_id: int,
-) -> List[dict[str, Any]]:
+) -> tuple[List[dict[str, Any]], Chat]:
     """
     Load chat messages from database.
     Returns a list of UIMessage-compatible dictionaries.
@@ -45,8 +45,7 @@ def load_chat(
     for msg in db_messages:
         ui_messages.append(msg.data)
 
-    return ui_messages
-
+    return ui_messages, chat
 
 def save_chat(
     session: SessionDep,
@@ -94,6 +93,22 @@ def save_chat(
     session.commit()
 
 
+def add_chat_title(
+    session: SessionDep,
+    chat_id: str,
+    user_id: int,
+    title: str,
+):
+    """Add or update the title of a chat."""
+    # Verify chat belongs to user
+    chat = session.get(Chat, chat_id)
+    if not chat or chat.user_id != user_id:
+        raise ValueError(f"Chat {chat_id} not found or access denied")
+
+    chat.title = title
+    session.add(chat)
+    session.commit()
+
 def list_chats(
     session: SessionDep,
     user_id: int,
@@ -137,6 +152,7 @@ def list_chats(
                 "preview": preview,
                 "last_role": last_role,
                 "updated_at": updated_at,
+                "title": chat.title,
             }
         )
 

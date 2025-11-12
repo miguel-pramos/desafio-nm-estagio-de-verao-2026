@@ -11,9 +11,10 @@ from ..config.ai import OpenAIClientDep
 from ..config.auth import UserDep
 from ..config.db import SessionDep
 from ..config.settings import SettingsDep
-from ..repositories.ai import create_chat, list_chats, load_chat, delete_chat
+from ..repositories.ai import add_chat_title, create_chat, list_chats, load_chat, delete_chat
 from ..schemas.ai import ClientMessage, ClientMessagePart
 from ..utils.ai import (
+    build_title_from_query,
     convert_to_openai_messages,
     patch_response_with_headers,
     stream_text,
@@ -46,12 +47,22 @@ async def handle_chat_data(
     chat_id = request.id
     previous_messages: List[dict[str, Any]] = []
 
+    # Find the user query text (prefer request.message if present)
+    user_query_text = ""
+    if request.message and request.message.content:
+        user_query_text = request.message.content
+    
     if chat_id:
         # Load previous messages
         try:
-            previous_messages = load_chat(session, chat_id, user.id)
+            previous_messages, chat = load_chat(session, chat_id, user.id)
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e))
+
+        if not chat.title:
+            title = build_title_from_query(client, user_query_text)
+            add_chat_title(session, chat_id, user.id, title)
+
         # Convert to ClientMessage format for processing
         client_messages = []
         for msg in previous_messages:
@@ -90,16 +101,7 @@ async def handle_chat_data(
 
     openai_messages = convert_to_openai_messages(messages)
 
-    # Find the user query text (prefer request.message if present)
-    user_query_text = ""
-    if request.message and request.message.content:
-        user_query_text = request.message.content
-    elif messages:
-        # assume the last user message is the query
-        for m in reversed(messages):
-            if m.role == "user":
-                user_query_text = m.content or ""
-                break
+
     # RAG
     # Pass explicit user query text to retrieve_docs to avoid ambiguity about message order
     docs = retrieve_docs(messages, 7, query=user_query_text)
@@ -185,6 +187,7 @@ class GetChatMessagesResponse(BaseModel):
 
 class ChatSummary(BaseModel):
     id: str
+    title: Optional[str] = None
     preview: Optional[str] = None
     last_role: Optional[str] = None
     updated_at: datetime
@@ -207,6 +210,7 @@ async def get_user_chats(
         chats=[
             ChatSummary(
                 id=item["id"],
+                title=item.get("title"),
                 preview=item.get("preview"),
                 last_role=item.get("last_role"),
                 updated_at=item["updated_at"],
@@ -224,7 +228,7 @@ async def get_chat_messages(
 ):
     """Load chat messages by chat ID."""
     try:
-        messages = load_chat(session, chat_id, user.id)
+        messages, _ = load_chat(session, chat_id, user.id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return GetChatMessagesResponse(id=chat_id, messages=messages)
