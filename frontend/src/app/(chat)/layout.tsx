@@ -10,7 +10,6 @@ export default async function ChatLayout({
   const user = await getUser();
 
   if (!user) {
-    console.log("redirecting to sign-in", user);
     redirect("/sign-in");
   }
 

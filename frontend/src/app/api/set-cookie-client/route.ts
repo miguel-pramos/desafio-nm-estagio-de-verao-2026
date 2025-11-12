@@ -8,9 +8,12 @@ export async function GET(request: NextRequest) {
   const token = url.searchParams.get("token");
   const redirectTo = "/";
 
-  if (!token) return NextResponse.redirect(new URL(redirectTo, request.url));
+  const redirectToUrl = new URL(request.nextUrl.origin);
+  redirectToUrl.pathname = redirectTo;
 
-  const res = NextResponse.redirect(new URL(redirectTo, request.url));
+  if (!token) return NextResponse.redirect(redirectToUrl);
+
+  const res = NextResponse.redirect(redirectToUrl);
 
   res.cookies.set({
     name: "access_token",

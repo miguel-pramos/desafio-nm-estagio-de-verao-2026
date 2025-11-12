@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 
 export async function createChat() {
   const headersList = Object.fromEntries(await headers());
-  console.log("createChat: ", headersList);
 
   return chatApi.createNewChatChatCreatePost({
     headers: headersList,
@@ -12,7 +11,6 @@ export async function createChat() {
 
 export async function getChatMessages(chatId: string) {
   const headersList = Object.fromEntries(await headers());
-  console.log("getChatMessages: ",headersList);
 
   return chatApi.getChatMessagesChatChatIdGet(
     { chatId },
@@ -25,7 +23,6 @@ export async function getChatMessages(chatId: string) {
 
 export async function getUserChats(limit?: number) {
   const headersList = Object.fromEntries(await headers());
-  console.log("getUserChats: ", headersList);
 
   return chatApi.getUserChatsChatGet(
     { limit },
