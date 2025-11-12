@@ -6,14 +6,14 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  const redirectTo = "/";
 
-  const redirectToUrl = new URL(request.nextUrl.origin);
-  redirectToUrl.pathname = redirectTo;
+  const redirectTo = process.env.NEXT_PUBLIC_HOME_URL ?? "/";
+  const redirectUrl = new URL(request.nextUrl.origin);
+  redirectUrl.pathname = redirectTo;
 
-  if (!token) return NextResponse.redirect(redirectToUrl);
+  if (!token) return NextResponse.redirect(redirectUrl);
 
-  const res = NextResponse.redirect(redirectToUrl);
+  const res = NextResponse.redirect(redirectUrl);
 
   res.cookies.set({
     name: "access_token",
