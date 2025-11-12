@@ -36,9 +36,7 @@ async def github_login(request: Request):
 
 
 @router.get("/github/callback")
-async def github_callback(
-    request: Request, settings: SettingsDep, session: SessionDep
-):
+async def github_callback(request: Request, settings: SettingsDep, session: SessionDep):
     """Handle GitHub OAuth callback but redirect to frontend with token in querystring.
 
     This route does NOT set the cookie on the backend. Instead it redirects the
@@ -54,9 +52,7 @@ async def github_callback(
     access_token = create_jwt(settings, str(user.id), JWT_ALG, JWT_EXP_MINUTES)
 
     # Redirect to frontend route that will set the cookie on the client side
-    redirect_url = (
-        f"{settings.FRONTEND_URL}/set-cookie-client?token={access_token}"
-    )
+    redirect_url = f"{settings.FRONTEND_URL}/api/set-cookie-client?token={access_token}"
     return RedirectResponse(url=redirect_url)
 
 
