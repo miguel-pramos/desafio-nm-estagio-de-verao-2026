@@ -32,6 +32,12 @@ export interface ChatSummary {
      * @type {string}
      * @memberof ChatSummary
      */
+    title?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatSummary
+     */
     preview?: string | null;
     /**
      * 
@@ -68,6 +74,7 @@ export function ChatSummaryFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
             ...json,
         'id': json['id'],
+        'title': json['title'] == null ? undefined : json['title'],
         'preview': json['preview'] == null ? undefined : json['preview'],
         'lastRole': json['last_role'] == null ? undefined : json['last_role'],
         'updatedAt': (new Date(json['updated_at'])),
@@ -87,6 +94,7 @@ export function ChatSummaryToJSONTyped(value?: ChatSummary | null, ignoreDiscrim
         
             ...value,
         'id': value['id'],
+        'title': value['title'],
         'preview': value['preview'],
         'last_role': value['lastRole'],
         'updated_at': value['updatedAt'].toISOString(),

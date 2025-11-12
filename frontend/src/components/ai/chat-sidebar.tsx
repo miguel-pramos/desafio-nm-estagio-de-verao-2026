@@ -19,6 +19,7 @@ import {
 
 type ChatSummary = {
   id: string;
+  title?: string | null;
   preview?: string;
   lastRole?: string | null;
   updatedAt: string;
@@ -34,8 +35,7 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-sidebar-border border-r"
-      variant="sidebar"
+      variant="floating"
     >
       <SidebarHeader className="border-sidebar-border border-b py-3">
         <div className="flex items-center justify-between gap-2">
@@ -81,7 +81,7 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
                 </SidebarMenuItem>
               ) : (
                 chats.map((chat, index) => {
-                  const title = buildChatTitle(chat.preview, index);
+                  const title = buildChatTitle(chat.title, chat.preview, index);
                   const relativeTime = formatRelativeTime(chat.updatedAt);
 
                   return (
@@ -102,12 +102,12 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
                               <MessageSquare className="size-4" />
                             </span>
                             <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                              <span className="text-sidebar-foreground block truncate text-sm leading-tight font-medium">
+                              <span className="text-sidebar-foreground block text-sm leading-tight font-medium">
                                 {title}
                               </span>
                             </span>
                             {relativeTime && (
-                              <span className="text-sidebar-foreground/60 ml-auto shrink-0 text-[10px] tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+                              <span className="text-sidebar-foreground/60 ml-auto shrink-0 text-[10px] tracking-wide uppercase group-hover:hidden group-data-[collapsible=icon]:hidden">
                                 {relativeTime}
                               </span>
                             )}
@@ -120,7 +120,7 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
                               e.stopPropagation();
                               onDeleteChat(chat.id);
                             }}
-                            className="text-sidebar-foreground/60 hover:text-sidebar-foreground group-hover:flex size-8 items-center justify-center rounded-md hidden "
+                            className="text-sidebar-foreground/60 hover:text-sidebar-foreground hidden size-8 items-center justify-center rounded-md group-hover:flex"
                             title="Deletar conversa"
                           >
                             <Trash2 className="size-4" />
@@ -139,12 +139,22 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
   );
 }
 
-function buildChatTitle(preview: string | undefined, index: number) {
+function buildChatTitle(
+  title: string | undefined | null,
+  preview: string | undefined,
+  index: number,
+) {
+  const explicitTitle = title?.trim();
+  if (explicitTitle) {
+    return explicitTitle.slice(0, 64);
+  }
+
   const base = preview?.trim();
   if (base) {
     const firstLine = base.split(/\n+/)[0] ?? base;
     return firstLine.slice(0, 48);
   }
+
   return `Conversa ${index + 1}`;
 }
 

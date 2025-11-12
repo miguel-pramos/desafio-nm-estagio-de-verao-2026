@@ -50,6 +50,7 @@ export default async function RootLayout({
       const listResp = await getUserChats();
       chats = (listResp?.chats ?? []).map((c) => ({
         id: c.id,
+        title: c.title ?? undefined,
         preview: c.preview ?? undefined,
         lastRole: c.lastRole ?? undefined,
         // Ensure updatedAt is a string (the sidebar expects ISO string)
@@ -69,8 +70,8 @@ export default async function RootLayout({
     <html lang="pt-BR" className={`${geist.variable}`}>
       <body>
         <App>
-          <SidebarProvider>
-            <ChatSidebarWrapper chats={chats} />
+          <SidebarProvider style={{ "--sidebar-width": "20rem", "--sidebar-width-mobile": "20rem" }}>
+            <ChatSidebarWrapper chats={chats}/>
             <SidebarInset className="bg-background">
               <AppHeader>
                 <AppHeaderTitle asChild>
