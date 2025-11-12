@@ -120,7 +120,7 @@ function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
                               e.stopPropagation();
                               onDeleteChat(chat.id);
                             }}
-                            className="text-sidebar-foreground/60 hover:text-sidebar-foreground flex size-8 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                            className="text-sidebar-foreground/60 hover:text-sidebar-foreground group-hover:flex size-8 items-center justify-center rounded-md hidden "
                             title="Deletar conversa"
                           >
                             <Trash2 className="size-4" />
