@@ -29,7 +29,7 @@ import {
 export class AuthApi extends runtime.BaseAPI {
 
     /**
-     * Handle GitHub OAuth callback.
+     * Handle GitHub OAuth callback but redirect to frontend with token in querystring.  This route does NOT set the cookie on the backend. Instead it redirects the user to the frontend page `/auth/set-cookie-client?token=...` which will persist the token as a cookie from the frontend server code.
      * Github Callback
      */
     async githubCallbackAuthGithubCallbackGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -55,7 +55,7 @@ export class AuthApi extends runtime.BaseAPI {
     }
 
     /**
-     * Handle GitHub OAuth callback.
+     * Handle GitHub OAuth callback but redirect to frontend with token in querystring.  This route does NOT set the cookie on the backend. Instead it redirects the user to the frontend page `/auth/set-cookie-client?token=...` which will persist the token as a cookie from the frontend server code.
      * Github Callback
      */
     async githubCallbackAuthGithubCallbackGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {

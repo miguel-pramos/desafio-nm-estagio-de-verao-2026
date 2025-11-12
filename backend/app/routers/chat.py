@@ -11,7 +11,7 @@ from ..config.ai import OpenAIClientDep
 from ..config.auth import UserDep
 from ..config.db import SessionDep
 from ..config.settings import SettingsDep
-from ..repositories.ai import create_chat, list_chats, load_chat
+from ..repositories.ai import create_chat, list_chats, load_chat, delete_chat
 from ..schemas.ai import ClientMessage, ClientMessagePart
 from ..utils.ai import (
     convert_to_openai_messages,
@@ -228,3 +228,17 @@ async def get_chat_messages(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return GetChatMessagesResponse(id=chat_id, messages=messages)
+
+
+@router.delete("/{chat_id}")
+async def delete_chat_endpoint(
+    session: SessionDep,
+    user: UserDep,
+    chat_id: str,
+):
+    """Delete a chat and all its messages."""
+    try:
+        delete_chat(session, chat_id, user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"message": "Chat deleted successfully"}

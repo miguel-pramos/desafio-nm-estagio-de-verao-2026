@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare, Plus, Trash2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -27,9 +27,10 @@ type ChatSummary = {
 interface ChatSidebarProps {
   chats: ChatSummary[];
   activeChatId?: string;
+  onDeleteChat?: (chatId: string) => void;
 }
 
-function ChatSidebar({ chats, activeChatId }: ChatSidebarProps) {
+function ChatSidebar({ chats, activeChatId, onDeleteChat }: ChatSidebarProps) {
   return (
     <Sidebar
       collapsible="icon"
@@ -38,7 +39,7 @@ function ChatSidebar({ chats, activeChatId }: ChatSidebarProps) {
     >
       <SidebarHeader className="border-sidebar-border border-b py-3">
         <div className="flex items-center justify-between gap-2">
-          <SidebarTrigger size={'lg'} className="ml-auto" />
+          <SidebarTrigger size={"lg"} className="ml-auto" />
         </div>
       </SidebarHeader>
 
@@ -85,35 +86,51 @@ function ChatSidebar({ chats, activeChatId }: ChatSidebarProps) {
                   const relativeTime = formatRelativeTime(chat.updatedAt);
 
                   return (
-                    <SidebarMenuItem key={chat.id}>
-                      <SidebarMenuButton
-                        asChild
-                        size="lg"
-                        tooltip={title}
-                        isActive={chat.id === activeChatId}
-                      >
-                        <Link
-                          href={`/chat/${chat.id}`}
-                          className="flex w-full items-center gap-3"
+                    <SidebarMenuItem key={chat.id} className="group">
+                      <div className="flex items-center gap-2">
+                        <SidebarMenuButton
+                          asChild
+                          size="lg"
+                          tooltip={title}
+                          isActive={chat.id === activeChatId}
+                          className="flex-1"
                         >
-                          <span className="bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-md">
-                            <MessageSquare className="size-4" />
-                          </span>
-                          <span className="group-data-[collapsible=icon]:hidden">
-                            <span className="text-sidebar-foreground block text-sm leading-tight font-medium">
-                              {title}
+                          <Link
+                            href={`/chat/${chat.id}`}
+                            className="flex w-full items-center gap-3"
+                          >
+                            <span className="bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-md">
+                              <MessageSquare className="size-4" />
                             </span>
-                            <span className="text-sidebar-foreground/70 block text-xs">
-                              {preview}
+                            <span className="group-data-[collapsible=icon]:hidden">
+                              <span className="text-sidebar-foreground block text-sm leading-tight font-medium">
+                                {title}
+                              </span>
+                              <span className="text-sidebar-foreground/70 block text-xs">
+                                {preview}
+                              </span>
                             </span>
-                          </span>
-                          {relativeTime && (
-                            <span className="text-sidebar-foreground/60 ml-auto text-[10px] tracking-wide uppercase group-data-[collapsible=icon]:hidden">
-                              {relativeTime}
-                            </span>
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
+                            {relativeTime && (
+                              <span className="text-sidebar-foreground/60 ml-auto text-[10px] tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+                                {relativeTime}
+                              </span>
+                            )}
+                          </Link>
+                        </SidebarMenuButton>
+                        {onDeleteChat && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onDeleteChat(chat.id);
+                            }}
+                            className="text-sidebar-foreground/60 hover:text-sidebar-foreground flex size-8 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                            title="Deletar conversa"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        )}
+                      </div>
                     </SidebarMenuItem>
                   );
                 })

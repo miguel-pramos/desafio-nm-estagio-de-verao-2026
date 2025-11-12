@@ -12,7 +12,10 @@ import { type Metadata, type Viewport } from "next";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ChatSidebar, type ChatSummary } from "@/components/ai/chat-sidebar";
+import {
+  ChatSidebarWrapper,
+  type ChatSummary,
+} from "@/components/ai/chat-sidebar-wrapper";
 import { getUserChats } from "@/lib/api/ai";
 import { getUser } from "@/lib/api/auth";
 
@@ -67,7 +70,7 @@ export default async function RootLayout({
       <body>
         <App>
           <SidebarProvider>
-            <ChatSidebar chats={chats} />
+            <ChatSidebarWrapper chats={chats} />
             <SidebarInset className="bg-background">
               <AppHeader>
                 <AppHeaderTitle asChild>

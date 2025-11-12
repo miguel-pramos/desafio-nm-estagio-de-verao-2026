@@ -35,6 +35,10 @@ import {
     ListChatsResponseToJSON,
 } from '../models/index';
 
+export interface DeleteChatEndpointChatChatIdDeleteRequest {
+    chatId: string;
+}
+
 export interface GetChatMessagesChatChatIdGetRequest {
     chatId: string;
 }
@@ -81,6 +85,49 @@ export class ChatApi extends runtime.BaseAPI {
      */
     async createNewChatChatCreatePost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CreateNewChatResponse> {
         const response = await this.createNewChatChatCreatePostRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Delete a chat and all its messages.
+     * Delete Chat Endpoint
+     */
+    async deleteChatEndpointChatChatIdDeleteRaw(requestParameters: DeleteChatEndpointChatChatIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['chatId'] == null) {
+            throw new runtime.RequiredError(
+                'chatId',
+                'Required parameter "chatId" was null or undefined when calling deleteChatEndpointChatChatIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/chat/{chat_id}`;
+        urlPath = urlPath.replace(`{${"chat_id"}}`, encodeURIComponent(String(requestParameters['chatId'])));
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Delete a chat and all its messages.
+     * Delete Chat Endpoint
+     */
+    async deleteChatEndpointChatChatIdDelete(requestParameters: DeleteChatEndpointChatChatIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.deleteChatEndpointChatChatIdDeleteRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

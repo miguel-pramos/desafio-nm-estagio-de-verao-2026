@@ -143,3 +143,26 @@ def list_chats(
     summaries.sort(key=lambda item: item["updated_at"], reverse=True)
 
     return summaries
+
+
+def delete_chat(
+    session: SessionDep,
+    chat_id: str,
+    user_id: int,
+):
+    """
+    Delete a chat and all its messages.
+    Raises ValueError if chat not found or access denied.
+    """
+    # Verify chat belongs to user
+    chat = session.get(Chat, chat_id)
+    if not chat or chat.user_id != user_id:
+        raise ValueError(f"Chat {chat_id} not found or access denied")
+
+    # Delete messages first (due to foreign key constraint)
+    delete_messages = delete(Message).where(col(Message.chat_id) == chat_id)
+    session.exec(delete_messages)
+
+    # Delete the chat
+    session.delete(chat)
+    session.commit()
