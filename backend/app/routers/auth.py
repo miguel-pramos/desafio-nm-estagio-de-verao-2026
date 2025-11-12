@@ -55,7 +55,7 @@ async def github_callback(
 
     # Redirect to frontend route that will set the cookie on the client side
     redirect_url = (
-        f"{settings.FRONTEND_URL}/auth/set-cookie-client?token={access_token}"
+        f"{settings.FRONTEND_URL}/set-cookie-client?token={access_token}"
     )
     return RedirectResponse(url=redirect_url)
 
