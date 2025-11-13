@@ -70,7 +70,14 @@ export default async function RootLayout({
     <html lang="pt-BR" className={`${geist.variable}`}>
       <body>
         <App>
-          <SidebarProvider style={{ "--sidebar-width": "20rem", "--sidebar-width-mobile": "20rem" }}>
+          <SidebarProvider
+            style={
+              {
+                "--sidebar-width": "20rem",
+                "--sidebar-width-mobile": "20rem",
+              } as React.CSSProperties
+            }
+          >
             <ChatSidebarWrapper chats={chats}/>
             <SidebarInset className="bg-background">
               <AppHeader>
