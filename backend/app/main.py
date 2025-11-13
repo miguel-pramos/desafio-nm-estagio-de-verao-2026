@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config.settings import get_settings
-from .routers import auth, chat, health
+from .routers import auth, chat, health, report
 from .services.embedding import chroma_db_populated, create_vector_store
 
 
@@ -49,3 +49,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(chat.router)
+app.include_router(report.router)
