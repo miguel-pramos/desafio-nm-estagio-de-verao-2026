@@ -33,17 +33,12 @@ As seguintes funcionalidades foram implementadas por mim sobre a base fornecida:
 - **Exclusão de chats** — Funcionalidade para apagar conversas
 - **Geração automática de títulos** — Títulos descritivos gerados por IA para cada conversa (backend + exibição no frontend)
 
-### Outros
-- **Geração de relatórios** — Endpoint público para exportação de relatórios em PDF
-- **Modularização** — Refatoração e organização do código em serviços, repositórios e utilitários
-
 ## Stack
 
 | Camada     | Tecnologias                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------- |
 | **Backend**  | Python, FastAPI, OpenAI SDK, LangChain, Chroma, SQLModel, Alembic, Authlib                      |
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Radix UI, AI SDK, React Markdown   |
-| **Infra**    | PostgreSQL, Docker & Docker Compose                                                              |
 
 ## Pré-requisitos
 
