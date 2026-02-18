@@ -1,32 +1,44 @@
-# Backend
+# Backend — Unicamp VestIA
 
-Backend FastAPI para um chatbot com IA que fornece respostas fundamentadas sobre o vestibular Unicamp 2026.
+API backend em FastAPI para o chatbot Unicamp VestIA. Desenvolvido como parte do processo seletivo do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
+
+A base fornecida pela NeuralMind já incluía a estrutura FastAPI, autenticação GitHub OAuth, streaming de respostas via SSE, persistência em PostgreSQL e health checks. As funcionalidades listadas abaixo foram desenvolvidas por mim sobre essa base.
+
+## Funcionalidades que eu desenvolvi
+
+### Pipeline RAG (Retrieval-Augmented Generation)
+- **Web scraper** — Scraping assíncrono de páginas HTML com crawling recursivo de URLs
+- **Scraping de PDFs** — Extração de conteúdo de documentos PDF
+- **Embeddings** — Geração de embeddings com OpenAI (`text-embedding-3-small`) e armazenamento no Chroma DB
+- **Construção de contexto** — Montagem de contexto a partir dos documentos recuperados, com citação de fontes
+- **Integração RAG** — Integração do pipeline de retrieval no fluxo de chat existente
+- **Reescrita de queries** — 4 estratégias de reescrita (expansão, simplificação, reformulação e combinada) para melhorar a recuperação de documentos
+
+### Gestão de Conversas
+- **Endpoint de chats existentes** — API para listar todas as conversas do usuário
+- **Exclusão de chats** — Endpoint para apagar conversas
+- **Geração automática de títulos** — Títulos descritivos gerados por IA para cada conversa
+
+### Outros
+- **Geração de relatórios** — Endpoint público `/report` para exportação em PDF
+- **Modularização** — Refatoração do código em serviços, repositórios e utilitários
 
 ## Stack
 
-- [**Python**](https://www.python.org/) - Linguagem de programação
-  - [**uv**](https://github.com/astral-sh/uv) - Gerenciador de pacotes Python rápido
-  - [**Ruff**](https://docs.astral.sh/ruff/) - Lint e formatação
-  - [**Makefile**](https://www.gnu.org/software/make/) - Comandos de desenvolvimento
-- [**FastAPI**](https://fastapi.tiangolo.com/) - Framework web moderno e rápido
-- [**Pydantic**](https://docs.pydantic.dev/latest/) - Validação de dados
-  - [**Pydantic Settings**](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) - Configurações de variáveis de ambiente
-- [**SQLModel**](https://sqlmodel.tiangolo.com/) - ORM SQL para Python
-  - [**PostgreSQL**](https://www.postgresql.org/) - Banco de dados
-  - [**Psycopg2**](https://www.psycopg.org/docs/) - Driver PostgreSQL para Python
-- [**Alembic**](https://alembic.sqlalchemy.org/en/latest/) - Ferramenta de migração de banco de dados
-- [**OpenAI Python SDK**](https://platform.openai.com/docs/api-reference/introduction?lang=python) - SDK para acessar as APIs da OpenAI e outras provedores de IA compatíveis
-- [**Authlib**](https://docs.authlib.org/en/latest/) - Autenticação
-   - [**GitHub OAuth Application**](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) - Provedor de autenticação fácil e não-burocrático
-- [**Docker**](https://www.docker.com/) & [**Docker Compose**](https://docs.docker.com/compose/) - Conteinerização
-
-Se você não estiver familiarizado com as diferentes tecnologias usadas neste projeto, consulte a documentação correspondente de cada uma.
+- [**Python 3.13+**](https://www.python.org/) com [**uv**](https://github.com/astral-sh/uv), [**Ruff**](https://docs.astral.sh/ruff/) e [**Makefile**](https://www.gnu.org/software/make/)
+- [**FastAPI**](https://fastapi.tiangolo.com/) — Framework web
+- [**OpenAI Python SDK**](https://platform.openai.com/docs/api-reference/introduction?lang=python) — Integração com LLM
+- [**LangChain**](https://python.langchain.com/) + [**Chroma**](https://www.trychroma.com/) — Pipeline RAG e vector store
+- [**SQLModel**](https://sqlmodel.tiangolo.com/) + [**PostgreSQL**](https://www.postgresql.org/) — ORM e banco de dados
+- [**Alembic**](https://alembic.sqlalchemy.org/) — Migrações de banco de dados
+- [**Authlib**](https://docs.authlib.org/) — Autenticação OAuth
+- [**Docker**](https://www.docker.com/) & [**Docker Compose**](https://docs.docker.com/compose/) — Conteinerização
 
 ## Pré-requisitos
 
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv) gerenciador de pacotes
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (para ambiente conteinerizado)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (para o banco de dados)
 
 ## Início Rápido
 
@@ -36,15 +48,10 @@ Se você não estiver familiarizado com as diferentes tecnologias usadas neste p
      ```
 
 2. **Configure o ambiente:**
-    
-     Copie o arquivo `.env.example` para `.env`, rodando:
-   
-      ```bash
-      make setup-env
-      ```
-
-     Em seguida, preencha os valores. Leia o conteúdo do arquivo para mais informações.
-
+     ```bash
+     make setup-env
+     ```
+     Preencha os valores no arquivo `.env` gerado. Leia o conteúdo do arquivo para mais informações.
 
 3. **Suba o container Docker do banco de dados:**
      ```bash
@@ -68,43 +75,22 @@ A API estará disponível em `http://localhost:8000` com documentação interati
 ```
 backend/
 ├── app/
-|   ├── .vscode/          # Configurações do VS Code
-│   ├── config/           # Configurações da aplicação
-│   │   ├── ai.py         # Configuração de IA (OpenAI, tools)
-│   │   ├── auth.py       # Configuração de autenticação
-│   │   ├── db.py         # Configuração do banco de dados
-│   │   └── settings.py   # Configurações de variáveis de ambiente
-│   ├── models/           # Modelos SQLModel (ORM)
-│   │   ├── ai.py         # Modelos relacionados a IA (chat, mensagens, etc.)
-│   │   └── auth.py       # Modelos de autenticação (user)
-│   ├── repositories/     # Camada de acesso a dados
-│   │   ├── ai.py         # Operações relacionadas a IA (chat, mensagens, etc.)
-│   │   └── auth.py       # Operações de autenticação
-│   ├── routers/          # Manipuladores de rotas da API
-│   │   ├── auth.py       # Endpoints de autenticação
-│   │   ├── chat.py       # Endpoints de chat
-│   │   └── health.py     # Endpoints de health check
-│   ├── schemas/          # Schemas Pydantic (validação)
-│   │   ├── ai.py         # Schemas relacionados a IA (chat, mensagens, etc.)
-│   │   └── auth.py       # Schemas de autenticação
-│   ├── utils/            # Funções utilitárias
-│   │   ├── auth.py       # Utilitários de autenticação (JWT, cookies, etc.)
-│   │   └── ai.py         # Utilitários relacionados a IA (conversão de mensagens, streaming de respostas, etc.)
+│   ├── config/           # Configurações (IA, auth, DB, variáveis de ambiente)
+│   ├── models/           # Modelos SQLModel (User, Chat, Message)
+│   ├── repositories/     # Camada de acesso a dados (CRUD)
+│   ├── routers/          # Endpoints da API (auth, chat, health, report)
+│   ├── schemas/          # Schemas Pydantic (validação de entrada/saída)
+│   ├── utils/            # Utilitários (JWT, streaming, conversão de mensagens)
 │   └── main.py           # Ponto de entrada da aplicação
-├── migrations/           # Arquivos de migração do Alembic
-│   ├── versions/         # Arquivos de versão das migrações
-│   ├── env.py            # Configuração do ambiente Alembic
-│   └── script.py.mako    # Template de migração
-├── tests/                # Arquivos de teste
+├── migrations/           # Migrações Alembic
+├── tests/                # Testes automatizados
 ├── alembic.ini           # Configuração do Alembic
-├── docker-compose.yml    # Serviços Docker
-└── Dockerfile            # Definição do container
+├── docker-compose.yml    # Serviços Docker (PostgreSQL)
+└── Dockerfile            # Imagem Docker do backend
 ```
 
 ## Documentação
 
-O FastAPI já gera automaticamente a documentação OpenAPI para esta API. Você pode acessar a interface interativa em `http://localhost:8000/docs`. Isso ajuda a entender a API, testar os endpoints e realizar chamadas à API.
+A documentação interativa da API é gerada automaticamente pelo FastAPI e está disponível em `http://localhost:8000/docs`.
 
-Os principais comandos de desenvolvimento estão no arquivo `Makefile` e podem ser rodados usando `make <comando>`. Para ver a lista completa, basta executar `make help`.
-
-Caso queira mais detalhes sobre alguma tecnologia utilizada, consulte a documentação oficial correspondente.
+Os principais comandos de desenvolvimento estão no `Makefile`. Execute `make help` para ver a lista completa.
