@@ -1,16 +1,15 @@
 # Frontend — Unicamp VestIA
 
-Interface frontend em Next.js para o chatbot Unicamp VestIA, oferecendo uma experiência de chat em tempo real com respostas fundamentadas sobre o Vestibular Unicamp 2026. Desenvolvido a partir da base do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
+Interface frontend em Next.js para o chatbot Unicamp VestIA. Desenvolvido como parte do processo seletivo do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
 
-## Funcionalidades Desenvolvidas
+A base fornecida pela NeuralMind já incluía a estrutura Next.js com chat streaming, autenticação GitHub OAuth, tema claro/escuro, design responsivo e componentes shadcn/ui. As funcionalidades listadas abaixo foram desenvolvidas por mim sobre essa base.
 
-- **Chat em tempo real** — Streaming de respostas com indicador de carregamento e botão de parar
-- **Renderização Markdown** — Respostas formatadas com GitHub Flavored Markdown
-- **Gestão de conversas** — Sidebar com histórico de chats, títulos automáticos, pré-visualização da última mensagem, criação e exclusão de conversas
-- **Autenticação GitHub** — Login via GitHub OAuth, perfil do usuário (avatar, nome), logout e rotas protegidas
-- **Tema claro/escuro** — Alternância de tema com persistência
-- **Design responsivo** — Interface adaptada para desktop e mobile com sidebar retrátil
-- **Tela de boas-vindas** — Página overview com descrição das funcionalidades do chatbot
+## Funcionalidades que eu desenvolvi
+
+- **Sidebar com histórico de conversas** — Exibição de todas as conversas do usuário na sidebar, com pré-visualização da última mensagem
+- **Exclusão de conversas** — Funcionalidade para apagar chats pela sidebar
+- **Exibição de títulos gerados** — Integração com o backend para mostrar títulos automáticos gerados por IA
+- **Melhorias de UX na sidebar** — Redesign dos botões e layout da sidebar de chats
 
 ## Stack
 

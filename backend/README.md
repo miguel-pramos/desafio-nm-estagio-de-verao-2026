@@ -1,22 +1,27 @@
 # Backend — Unicamp VestIA
 
-API backend em FastAPI para o chatbot Unicamp VestIA, com pipeline RAG (Retrieval-Augmented Generation) para fornecer respostas fundamentadas sobre o Vestibular Unicamp 2026. Desenvolvido a partir da base do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
+API backend em FastAPI para o chatbot Unicamp VestIA. Desenvolvido como parte do processo seletivo do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
 
-## Funcionalidades Desenvolvidas
+A base fornecida pela NeuralMind já incluía a estrutura FastAPI, autenticação GitHub OAuth, streaming de respostas via SSE, persistência em PostgreSQL e health checks. As funcionalidades listadas abaixo foram desenvolvidas por mim sobre essa base.
 
-- **Pipeline RAG completo**
-  - Web scraping assíncrono de páginas HTML e PDFs com crawling de URLs
-  - Ingestão de documentos no Chroma DB com embeddings OpenAI (`text-embedding-3-small`)
-  - Busca por similaridade (K=7 documentos por query)
-  - Reescrita de queries com 4 estratégias: expansão, simplificação, reformulação e combinada
-  - Ingestão automática opcional na inicialização do servidor
-  - Construção de contexto com citação de fontes
-- **Streaming de respostas** — Respostas em tempo real via Server-Sent Events (SSE)
-- **Persistência de conversas** — CRUD completo de chats e mensagens em PostgreSQL
+## Funcionalidades que eu desenvolvi
+
+### Pipeline RAG (Retrieval-Augmented Generation)
+- **Web scraper** — Scraping assíncrono de páginas HTML com crawling recursivo de URLs
+- **Scraping de PDFs** — Extração de conteúdo de documentos PDF
+- **Embeddings** — Geração de embeddings com OpenAI (`text-embedding-3-small`) e armazenamento no Chroma DB
+- **Construção de contexto** — Montagem de contexto a partir dos documentos recuperados, com citação de fontes
+- **Integração RAG** — Integração do pipeline de retrieval no fluxo de chat existente
+- **Reescrita de queries** — 4 estratégias de reescrita (expansão, simplificação, reformulação e combinada) para melhorar a recuperação de documentos
+
+### Gestão de Conversas
+- **Endpoint de chats existentes** — API para listar todas as conversas do usuário
+- **Exclusão de chats** — Endpoint para apagar conversas
 - **Geração automática de títulos** — Títulos descritivos gerados por IA para cada conversa
-- **Autenticação GitHub OAuth 2.0** — Fluxo OAuth completo com tokens JWT (HS256, 60min) e cookies seguros
-- **Geração de relatórios** — Endpoint `/report` para exportação em PDF
-- **Health checks** — Monitoramento da disponibilidade do serviço
+
+### Outros
+- **Geração de relatórios** — Endpoint público `/report` para exportação em PDF
+- **Modularização** — Refatoração do código em serviços, repositórios e utilitários
 
 ## Stack
 

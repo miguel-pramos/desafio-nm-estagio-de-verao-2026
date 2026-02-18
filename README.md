@@ -1,17 +1,41 @@
 # Unicamp VestIA — Chatbot com RAG para o Vestibular Unicamp 2026
 
-Aplicação full-stack de chatbot com inteligência artificial e **Retrieval-Augmented Generation (RAG)** que fornece respostas fundamentadas sobre o Vestibular Unicamp 2026. Desenvolvido como projeto para o [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026), utilizando a base fornecida pelo desafio como ponto de partida.
+Projeto desenvolvido por **Miguel Ramos** como parte do processo seletivo do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
 
-## Funcionalidades
+O desafio consistia em construir funcionalidades sobre uma **aplicação base** fornecida pela NeuralMind — um chatbot full-stack com FastAPI, Next.js, PostgreSQL, autenticação via GitHub OAuth e streaming de respostas. A partir dessa base, desenvolvi um **pipeline RAG completo** e diversas melhorias de UX e gestão de conversas, descritas abaixo.
 
-- **Pipeline RAG completo** — Web scraping assíncrono (HTML e PDF), ingestão de documentos no Chroma DB com embeddings OpenAI, e busca por similaridade com reescrita de queries (expansão, simplificação, reformulação e estratégia combinada).
-- **Streaming de respostas em tempo real** — Respostas da IA transmitidas via Server-Sent Events (SSE) com indicador de carregamento e botão de parar.
-- **Persistência de conversas** — Histórico completo de chats e mensagens armazenado em PostgreSQL, com possibilidade de retomar conversas anteriores.
-- **Títulos automáticos** — Geração automática de títulos descritivos para cada conversa via IA.
-- **Autenticação via GitHub OAuth 2.0** — Fluxo OAuth completo com tokens JWT e cookies seguros.
-- **Geração de relatórios** — Endpoint para geração de relatórios em PDF.
-- **Interface responsiva** — UI com tema claro/escuro, sidebar retrátil, renderização Markdown e design mobile-friendly.
-- **Deploy via Docker** — Orquestração de todos os serviços (backend, frontend, banco de dados) com Docker Compose.
+## O que já vinha na base
+
+A aplicação base fornecida pelo desafio incluía:
+
+- Chat com streaming de respostas via SSE (Server-Sent Events)
+- Autenticação via GitHub OAuth 2.0 com JWT
+- Persistência de chats e mensagens em PostgreSQL (SQLModel + Alembic)
+- Interface Next.js com Tailwind CSS, shadcn/ui e tema claro/escuro
+- Deploy via Docker Compose
+- Health checks
+
+## Funcionalidades que eu desenvolvi
+
+As seguintes funcionalidades foram implementadas por mim sobre a base fornecida:
+
+### Pipeline RAG (Retrieval-Augmented Generation)
+- **Web scraper** — Scraping assíncrono de páginas HTML com crawling recursivo de URLs
+- **Scraping de PDFs** — Extração de conteúdo de documentos PDF
+- **Embeddings** — Geração de embeddings com OpenAI (`text-embedding-3-small`) e armazenamento no Chroma DB
+- **Construção de contexto** — Montagem de contexto a partir dos documentos recuperados, com citação de fontes
+- **Integração RAG** — Integração do pipeline de retrieval no fluxo de chat existente
+- **Reescrita de queries** — 4 estratégias de reescrita (expansão, simplificação, reformulação e combinada) para melhorar a recuperação de documentos
+
+### Gestão de Conversas
+- **Endpoint de chats existentes** — API para listar todas as conversas do usuário
+- **Sidebar com histórico** — Exibição de todas as conversas na sidebar do frontend
+- **Exclusão de chats** — Funcionalidade para apagar conversas
+- **Geração automática de títulos** — Títulos descritivos gerados por IA para cada conversa (backend + exibição no frontend)
+
+### Outros
+- **Geração de relatórios** — Endpoint público para exportação de relatórios em PDF
+- **Modularização** — Refatoração e organização do código em serviços, repositórios e utilitários
 
 ## Stack
 
@@ -63,14 +87,14 @@ desafio-nm-estagio-de-verao-2026/
 
 ## Documentação
 
-- [Backend README](backend/README.md) — Detalhes da API, pipeline RAG, modelos e comandos de desenvolvimento.
+- [Backend README](backend/README.md) — Detalhes da API, pipeline RAG e comandos de desenvolvimento.
 - [Frontend README](frontend/README.md) — Detalhes da interface, componentes e comandos de desenvolvimento.
 
 ## Autor
 
 **Miguel Ramos** — [GitHub](https://github.com/miguel-pramos)
 
-Projeto desenvolvido como parte do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026).
+Projeto desenvolvido como parte do processo seletivo do [Desafio Estágio Verão 2026 da NeuralMind](https://github.com/neuralmind-ai/desafio-nm-estagio-de-verao-2026). A aplicação base (chat com streaming, autenticação OAuth, persistência e interface) foi fornecida pela NeuralMind; as funcionalidades de RAG, gestão de conversas e demais melhorias foram desenvolvidas por mim.
 
 ---
 
